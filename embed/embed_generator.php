@@ -1,5 +1,9 @@
 <?php
-header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+}
+
 
 // !!! IMPORTANT: REPLACE WITH YOUR DISCORD BOT TOKEN !!!
 // You can get this from your Discord Developer Portal -> Your Application -> Bot -> Token
