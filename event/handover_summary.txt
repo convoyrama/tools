@@ -1,0 +1,111 @@
+# Resumen de Entrega para Continuación del Trabajo (Generador de Eventos)
+
+## 1. Plan General del Proyecto (Objetivo Inicial)
+
+El objetivo principal es reimplementar la funcionalidad del "Generador de Eventos" (`convoyrama.github.io/event.html`) en un entorno PHP (`tools/event/`), siguiendo una arquitectura dividida (frontend/backend) similar a la que ya implementamos para el "Generador de Embeds" (`tools/embed/`). Además, se busca integrar la internacionalización (i18n) y asegurar una identidad visual consistente entre ambas herramientas.
+
+**Fases del Plan Original:**
+
+*   **Fase 1: Reimplementación del Generador de Eventos en PHP**
+    1.  Análisis Detallado del Diseño de `event.html`.
+    2.  Creación del Backend PHP (`event_generator.php` en `tools/event/`).
+    3.  Creación del Frontend HTML (`event_index.html` en `tools/event/`).
+    4.  Implementación de la Lógica de Generación de Imagen en PHP.
+    5.  Integración de Cálculos de Tiempo en PHP.
+    6.  Verificación de la Funcionalidad del Generador de Eventos.
+*   **Fase 2: Integración de Internacionalización (i18n) e Identidad Visual Consistente**
+    1.  Identificación de Cadenas de Texto.
+    2.  Actualización de Archivos de Idioma.
+    3.  Aplicación de i18n en `event_index.html`.
+    4.  Reutilización de Estilos y Utilidades.
+    5.  Verificación Final.
+
+## 2. Trabajo Realizado Hasta el Momento
+
+### 2.1. Creación de la Estructura Base
+
+*   **Directorio `tools/event/`:** Creado.
+*   **Backend `tools/event/event_generator.php`:** Creado y con una estructura inicial.
+*   **Frontend `tools/event/event_index.html`:** Creado a partir de `convoyrama.github.io/event.html` y simplificado.
+*   **Frontend JS `tools/event/event_generator_frontend.js`:** Creado y con lógica inicial.
+*   **Directorio `tools/event/fonts/`:** Creado (se asume que el usuario colocará `Arial-Bold.ttf` aquí).
+
+### 2.2. Funcionalidad Implementada en `event_generator.php` (Backend PHP)
+
+*   **Manejo de Solicitudes POST:** El script PHP ahora recibe datos de un formulario.
+*   **Cálculos de Tiempo:**
+    *   La función `getGameTime(DateTimeImmutable $realWorldUtcDateTime)` está implementada para calcular la hora in-game.
+    *   La función `formatTime(array $time)` está implementada para formatear la hora.
+    *   Se realizan cálculos de `meetingDateTime`, `departureDateTime`, `arrivalDateTime`, `meetingGameTime`, `departureGameTime`, `arrivalGameTime` basados en los datos recibidos.
+*   **Carga y Dibujo de Imágenes Base:**
+    *   La función `loadImageFromFile(array $fileData)` carga imágenes de archivos subidos (`$_FILES`).
+    *   El background y el `mapImage` se cargan y dibujan en el canvas.
+    *   El `logoImage` se carga y dibuja.
+*   **Dibujo de Texto Básico:**
+    *   Se dibuja el `eventName` con un fondo opaco.
+    *   Se dibuja el bloque de texto principal (Servidor, Partida, Destino, Descripción, y Horarios por Zona Horaria) utilizando la función `wrapText`.
+*   **Manejo de Traducción en Backend (`getBackendTranslation`):** Una función básica que usa un array de traducciones en español hardcodeadas.
+*   **Variables Globales/Constantes:** `TIMEZONE_REGIONS` y `TIMEZONE_COUNTRY_CODES` se han definido.
+
+### 2.3. Funcionalidad Implementada en `event_index.html` (Frontend HTML)
+
+*   **Simplificación de Estructura:** Se han eliminado los elementos `<canvas>` y los controles asociados al dibujo en cliente.
+*   **Importación de Scripts:** Se ha actualizado para cargar `event_generator_frontend.js` como módulo.
+*   **Visualización de Imagen:** Se ha añadido un `<img>` (`#generated-flyer`) para mostrar la imagen generada por el backend.
+*   **Botón "Generar Imagen" (`#generate-image`):** Añadido.
+*   **Mensajes de Estado:** Añadido un párrafo (`#status-message`) para mostrar retroalimentación al usuario.
+
+### 2.4. Funcionalidad Implementada en `event_generator_frontend.js` (Frontend JS)
+
+*   **Utilidad i18n:** Se ha copiado la lógica de `loadTranslations`, `translate`, `applyTranslations`.
+*   **Referencias DOM (`dom`):** Se han actualizado las referencias a los elementos HTML simplificados.
+*   **Cálculos de Tiempo en Frontend:** `updateLiveClocks` y `updateInGameTimeEmojis` están adaptados para la nueva estructura.
+*   **Función `generateImage()`:** Implementada para recolectar datos del formulario, enviar `FormData` al backend (`event_generator.php`) y mostrar la imagen devuelta.
+*   **Manejo de Traducciones en Frontend:** Se han implementado llamadas a `translate()` para los mensajes de estado y se han añadido las nuevas claves al `es.json`, `en.json` y `pt.json` de `tools/embed/locales/`.
+
+## 3. Lo que Queda por Hacer
+
+*   **Fase 1: Reimplementación del Generador de Eventos en PHP (Continuación)**
+    *   **Implementación de Estilos de Texto:** La lógica `switch (textStyle)` está en `event_generator.php`, pero aún necesita ser aplicada correctamente a los comandos `imagettftext`. Se deben inicializar `textFillColor`, `shadowColor`, `borderColor` y `shadowBlur` *antes* del `switch`, y el `switch` debe *asignarles* los colores GD apropiados. Se necesita una implementación básica de sombreado (dibujar el texto dos veces con un pequeño desplazamiento).
+    *   **Overlays de Imágenes Circulares:** Implementar la carga de imágenes como `circleImageTop`, `circleImageBottom`, `waypointImage`, realizar el recorte circular (masking) en GD, y dibujarlas en la imagen principal. Esta es una tarea compleja en GD.
+    *   **Dibujar Etiquetas de Texto para Círculos:** Añadir los textos "Partida", "Destino", "Waypoint" junto a los círculos.
+    *   **Dibujar Imagen de Detalle:** Cargar y dibujar `detailImage`.
+    *   **Incrustación de Metadatos:** Integrar un método para incrustar los datos JSON del evento como un `tEXt` chunk en el PNG generado. Esto requiere una librería PHP externa o post-procesamiento.
+
+*   **Fase 2: Integración de Internacionalización (i18n) e Identidad Visual Consistente (Continuación)**
+    *   **Identificación de Cadenas de Texto:** Se necesita revisar `event_generator.php` para cualquier cadena de texto que genere (e.g., errores de fuente) y añadirla a los archivos de idioma.
+    *   **Reutilización de Estilos y Utilidades:**
+        *   Identificar y mover estilos CSS comunes de `convoyrama.github.io/assets/style.css` y `convoyrama.github.io/event/css/style.css` a un archivo CSS compartido (e.g., `tools/common/common.css`).
+        *   Identificar y mover funciones JavaScript comunes que puedan ser útiles para ambos generadores a un archivo JS compartido (e.g., `tools/common/common.js`).
+        *   Ajustar las rutas de los archivos CSS y JS en `event_index.html` y `index.html`.
+        *   **Centralizar Locales:** Mover los archivos de idioma a una ubicación central (`tools/common/locales/` o `tools/locales/`) y ajustar las rutas en ambos frontends (`embed/index.html` y `event/event_index.html`).
+    *   **Verificación Final:** Probar a fondo toda la funcionalidad del nuevo generador de eventos en PHP, incluyendo la generación precisa de flyers y el cambio de idioma.
+
+## 4. Problemas Encontrados y Lecciones Aprendidas
+
+El mayor problema recurrente ha sido la **estricta sensibilidad del comando `replace` a las coincidencias exactas de `old_string`**, incluyendo espacios en blanco, saltos de línea y comentarios. Esto llevó a fallos repetidos al intentar reemplazar bloques grandes de código o HTML.
+
+**Lección Aprendida:** Para futuras tareas, es crucial:
+*   Utilizar `read_file` **inmediatamente antes** de cada `replace` para obtener la cadena `old_string` exacta.
+*   Realizar reemplazos en **bloques de código muy pequeños y atómicos** para minimizar las posibilidades de error.
+*   Verificar el estado del archivo **después de cada reemplazo exitoso**.
+
+## 5. Próximos Pasos Sugeridos para Otra IA
+
+Para continuar con el trabajo, la próxima IA debería abordar los puntos pendientes de la **Fase 1**, centrándose primero en la **Implementación de Estilos de Texto** y luego en los **Overlays de Imágenes Circulares** en `event_generator.php`.
+
+**Requisitos Previos:**
+*   Asegurarse de que el archivo `Arial-Bold.ttf` esté presente en `tools/event/fonts/`.
+*   Tener acceso a una librería GD de PHP con soporte para `imagettftext` y manipulación de imágenes.
+
+**Ejemplo de cómo abordar la implementación de estilos de texto (Pasos):**
+
+1.  **Re-leer `tools/event/event_generator.php`** para asegurar el estado actual.
+2.  **Identificar el bloque de asignación de colores iniciales** y el `switch ($textStyle)` existente.
+3.  **Realizar un `replace` para definir un conjunto de variables de color RGB** (e.g., `$color_red = [255, 0, 0];`) antes del bloque `// Allocate colors`.
+4.  **Realizar un `replace` para modificar el bloque `// Allocate colors`** para usar estos valores RGB en `imagecolorallocate($image, $color_red[0], $color_red[1], $color_red[2]);`.
+5.  **Realizar un `replace` para inicializar `$textFillColor`, `$shadowColor`, `$borderColor`** con valores GD de color (e.g., `$lightGray`, `imagecolorallocatealpha($image, 0,0,0,50)`, `$white`) justo antes del `switch ($textStyle)`.
+6.  **Realizar un `replace` para modificar cada `case` en el `switch ($textStyle)`** para asignar los *identificadores de color GD* correctos a `$textFillColor`, `$shadowColor`, `$borderColor`.
+7.  **Realizar un `replace` para modificar los `imagettftext`** del `eventName` y del bloque de texto principal para primero dibujar una sombra (llamando a `imagettftext` con `$shadowColor` con un pequeño desplazamiento) y luego el texto principal con `$textFillColor`.
+
+Este enfoque atómico y con verificación constante debería evitar los problemas de reemplazo masivo que hemos experimentado.

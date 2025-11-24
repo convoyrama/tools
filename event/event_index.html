@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title data-i18n="page_title">Convoyrama | Crear Evento Personalizado</title>
+    <meta name="description" content="Convoyrama - Crear eventos personalizados para convoys">
+    <link rel="stylesheet" href="../common/css/global.css">
+    <link rel="stylesheet" href="../common/css/event.css">
+    <link rel="icon" href="./assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="./assets/images/favicon.png">
+    <script src="../common/js/twemoji.min.js"></script>
+    <!--
+    <script>
+      // Redirigir a la página de mantenimiento si no es modo desarrollador
+      if (!window.location.search.includes('dev=1')) {
+        window.location.href = 'mantenimiento.html';
+      }
+    </script>
+    -->
+</head>
+<body data-i18n-plurals>
+    <header>
+        <nav>
+            <a href="index.html" data-i18n="nav_home">Home</a>
+            <a href="pc.html" data-i18n="nav_profile_creator">Creador de Perfil</a>
+            <a href="id.html" data-i18n="nav_license">Licencia</a>
+            <a href="event.html" data-i18n="nav_create_event">Crear Evento</a>
+        </nav>
+        <p data-i18n="header_title">Crear Evento Personalizado</p>
+    </header>
+    <div class="warning-message" data-i18n="warning_message">Esta página puede demorar en cargar.</div>
+    <div class="contenedor">
+        <div id="live-clocks">
+            <span data-i18n="local_time">Hora Local:</span> <span id="local-time-display">--:--:--</span></span> |
+            <span data-i18n="ingame_time">Hora In-Game:</span> <span id="game-time-display">--:--:--</span> <span id="game-time-emoji"></span></span>
+        </div>
+
+        <div id="controls-bar">
+            <div id="lang-selector">
+                <span class="flag-emoji" data-lang="es">🇺🇾</span>
+                <span class="flag-emoji" data-lang="en">🇺🇸</span>
+                <span class="flag-emoji" data-lang="pt">🇧🇷</span>
+            </div>
+            <div class="time-controls-container">
+                <div id="region-selector-container">
+                    <label for="region-select" data-i18n="region_selector_title">Regiones Horarias</label>
+                    <select id="region-select"></select>
+                </div>
+                <div id="manual-offset-container">
+                    <label for="manual-offset-select" data-i18n="manual_offset_title">Ajuste Manual UTC:</label>
+                    <select id="manual-offset-select">
+                        <option value="auto" selected>Auto</option>
+                        <option value="-12">UTC-12</option>
+                        <option value="-11">UTC-11</option>
+                        <option value="-10">UTC-10</option>
+                        <option value="-9">UTC-9</option>
+                        <option value="-8">UTC-8</option>
+                        <option value="-7">UTC-7</option>
+                        <option value="-6">UTC-6</option>
+                        <option value="-5">UTC-5</option>
+                        <option value="-4">UTC-4</option>
+                        <option value="-3">UTC-3</option>
+                        <option value="-2">UTC-2</option>
+                        <option value="-1">UTC-1</option>
+                        <option value="0">UTC+0</option>
+                        <option value="1">UTC+1</option>
+                        <option value="2">UTC+2</option>
+                        <option value="3">UTC+3</option>
+                        <option value="4">UTC+4</option>
+                        <option value="5">UTC+5</option>
+                        <option value="6">UTC+6</option>
+                        <option value="7">UTC+7</option>
+                        <option value="8">UTC+8</option>
+                        <option value="9">UTC+9</option>
+                        <option value="10">UTC+10</option>
+                        <option value="11">UTC+11</option>
+                        <option value="12">UTC+12</option>
+                        <option value="13">UTC+13</option>
+                        <option value="14">UTC+14</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-event">
+            <h3 data-i18n="event_section_title">Crear Evento Personalizado</h3>
+            <div class="input-row">
+                <div class="input-col">
+                    <label for="custom-date" data-i18n="label_date">Fecha:</label>
+                    <input type="date" id="custom-date">
+                </div>
+                <div class="input-col">
+                    <label for="custom-time" data-i18n="label_meeting_time">Hora de reunión:</label>
+                    <input type="time" id="custom-time">
+                </div>
+                <div class="input-col">
+                    <label for="departure-time-offset" data-i18n="label_departure_time_offset">Hora de salida:</label>
+                    <select id="departure-time-offset">
+                        <option value="10">10 min</option>
+                        <option value="15" selected>15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                    </select>
+                </div>
+                <span id="ingame-emoji-display"></span>
+                </div>
+            </div>
+            <div id="custom-date-display"></div>
+            <div class="input-row">
+                <input type="text" id="custom-event-name" data-i18n-placeholder="placeholder_event_name" placeholder="Nombre del evento">
+                <input type="text" id="custom-event-link" data-i18n-placeholder="placeholder_event_link" placeholder="Enlace del evento">
+            </div>
+            <div class="input-row">
+                <input type="text" id="custom-start-place" data-i18n-placeholder="placeholder_start_place" placeholder="Lugar de partida">
+                <input type="text" id="custom-destination" data-i18n-placeholder="placeholder_destination" placeholder="Lugar de destino">
+            </div>
+            <div class="input-row">
+                <input type="text" id="custom-server" data-i18n-placeholder="placeholder_server" placeholder="Servidor">
+            </div>
+            <label for="custom-event-description" data-i18n="label_description">Descripción:</label>
+            <textarea id="custom-event-description" data-i18n-placeholder="placeholder_event_description" placeholder="Descripción del evento" rows="6"></textarea>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="map-upload" data-i18n="label_map">Mapa:</label>
+                    <input type="file" id="map-upload" accept="image/*">
+                    <div class="zoom-buttons">
+                        <button id="zoom-in">+</button>
+                        <button id="zoom-out">-</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="circle-upload-top" data-i18n="label_departure_map">Partida:</label>
+                    <input type="file" id="circle-upload-top" accept="image/*">
+                    <div class="zoom-buttons">
+                        <button id="zoom-in-top">+</button>
+                        <button id="zoom-out-top">-</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="circle-upload-bottom" data-i18n="label_destination_map">Destino:</label>
+                    <input type="file" id="circle-upload-bottom" accept="image/*">
+                    <div class="zoom-buttons">
+                        <button id="zoom-in-bottom">+</button>
+                        <button id="zoom-out-bottom">-</button>
+                    </div>
+                </div>
+                <div class="input-group" id="waypoint-group">
+                    <div class="label-container">
+                        <label for="waypoint-upload" data-i18n="label_waypoint">Waypoint:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="waypoint-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <input type="file" id="waypoint-upload" accept="image/*">
+                    <div class="zoom-buttons">
+                        <button id="zoom-in-waypoint">+</button>
+                        <button id="zoom-out-waypoint">-</button>
+                    </div>
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="logo-upload" data-i18n="label_vtc_logo">Logo VTC:</label>
+                    <input type="file" id="logo-upload" accept="image/*">
+                    <div class="zoom-buttons" style="display: none;">
+                        <button>+</button>
+                        <button>-</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="background-upload" data-i18n="label_background">Fondo:</label>
+                    <input type="file" id="background-upload" accept="image/*">
+                </div>
+                <div class="input-group">
+                    <label for="detail-upload" data-i18n="label_detail">Detalle:</label>
+                    <input type="file" id="detail-upload" accept="image/*">
+                    <div class="zoom-buttons">
+                        <button id="zoom-in-detail">+</button>
+                        <button id="zoom-out-detail">-</button>
+                    </div>
+                </div>
+            </div>
+            <div id="image-display-container">
+                <img id="generated-flyer" src="" alt="Flyer del Evento Generado" style="max-width:100%; height:auto; display:block; margin: 20px auto;">
+            </div>
+            <div class="canvas-controls">
+                <button id="generate-image" data-i18n="btn_generate_image">Generar Imagen</button>
+                <p id="status-message" data-i18n="status_message_placeholder"></p>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <small>© LAG'S SPEED - CONVOYRAMA 2025 - v2</small>
+    </footer>
+    <script src="../../twemoji-14.0.2/twemoji.min.js"></script>
+    <script type="module" src="./event_generator_frontend.js"></script>
+</body>
+</html>

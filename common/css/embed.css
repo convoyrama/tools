@@ -1,0 +1,358 @@
+        body {
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: #36393f; /* Discord dark background */
+            color: #dcddde; /* Discord text color */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            background-color: #2f3136; /* Discord lighter dark background */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px 0 rgba(0,0,0,.2);
+            overflow: hidden;
+        }
+
+        .controls {
+            flex: 1;
+            padding: 20px;
+            background-color: #2f3136;
+            border-right: 1px solid #202225;
+            max-width: 50%;
+            box-sizing: border-box;
+        }
+
+        .controls h2, .preview-area h2 {
+            color: #fff;
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #4f545c;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #4f545c;
+        }
+        .control-group:last-of-type {
+            border-bottom: none;
+        }
+
+        .control-group h3 {
+            color: #99aab5;
+            font-size: 16px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        textarea,
+        input[type="color"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #202225;
+            border-radius: 4px;
+            background-color: #40444b;
+            color: #dcddde;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="color"] {
+            height: 40px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #99aab5;
+            font-size: 14px;
+        }
+        label input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        button {
+            background-color: #7289da; /* Discord blue */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #677bc4;
+        }
+        button:active {
+            background-color: #5b6eae;
+        }
+
+        .io-buttons button {
+            width: calc(50% - 5px);
+            margin-right: 0;
+        }
+        .io-buttons button:first-child {
+            margin-right: 10px;
+        }
+
+        .field-item {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #40444b;
+            border-radius: 4px;
+            border: 1px solid #202225;
+        }
+        .field-item input[type="text"] {
+            flex: 1;
+            margin-bottom: 0;
+            width: auto;
+        }
+        .field-item .field-inline-checkbox {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: flex-end;
+            margin-top: 5px;
+        }
+        .field-item .field-inline-checkbox label {
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            color: #dcddde;
+        }
+        .field-item .field-inline-checkbox input[type="checkbox"] {
+            margin-left: 10px;
+        }
+        .field-item button {
+            background-color: #f04747; /* Discord red */
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            border-radius: 50%;
+        }
+        .field-item button:hover {
+            background-color: #cc3939;
+        }
+
+        /* Preview Area */
+        .preview-area {
+            flex: 1;
+            padding: 20px;
+            background-color: #36393f;
+            overflow-y: auto;
+            max-width: 50%;
+            box-sizing: border-box;
+        }
+        .discord-mockup {
+            background-color: #36393f; /* Main Discord chat background */
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .discord-message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .discord-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #202225;
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .discord-message-content {
+            flex-grow: 1;
+        }
+        .discord-username {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 2px;
+            font-size: 15px;
+        }
+
+        .discord-embed {
+            display: flex;
+            margin-top: 8px;
+            max-width: 520px; /* Discord embed max width */
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: #2f3136; /* Embed background */
+            border-left: 4px solid #7289da; /* Default embed color */
+            position: relative;
+            font-size: 13px;
+            line-height: 18px;
+        }
+        .embed-sidebar {
+            width: 4px;
+            flex-shrink: 0;
+        }
+        .embed-content {
+            padding: 8px 16px 8px 12px;
+            flex-grow: 1;
+        }
+        .embed-author {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            color: #fff;
+            font-weight: 600;
+        }
+        .embed-author-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+        }
+        .embed-author-name {
+            color: #fff;
+            text-decoration: none;
+        }
+        .embed-author-name:hover {
+            text-decoration: underline;
+        }
+
+        .embed-title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            text-decoration: none;
+        }
+        .embed-title:hover {
+            text-decoration: underline;
+        }
+
+        .embed-description {
+            color: #dcddde;
+            margin-bottom: 10px;
+            white-space: pre-wrap; /* Preserve newlines from markdown */
+        }
+
+        .embed-fields {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .embed-field {
+            margin-bottom: 10px;
+            flex-basis: 100%;
+            font-size: 13px;
+        }
+        .embed-field.inline {
+            flex-basis: calc(50% - 12px); /* Two fields per row with gap */
+            margin-right: 24px;
+        }
+        .embed-field.inline:nth-child(2n) {
+            margin-right: 0;
+        }
+        .embed-field h4 {
+            color: #fff;
+            font-weight: bold;
+            margin: 0 0 2px 0;
+        }
+        .embed-field p {
+            color: #dcddde;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .embed-thumbnail {
+            width: 80px; /* Adjust as needed */
+            height: 80px;
+            object-fit: contain;
+            float: right;
+            margin-left: 10px;
+            margin-bottom: 10px;
+        }
+        .embed-thumbnail img {
+            width: 100%;
+            height: 100%;
+            border-radius: 3px;
+        }
+        .embed-image {
+            margin-top: 10px;
+        }
+        .embed-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .embed-footer {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            color: #72767d;
+            font-size: 12px;
+        }
+        .embed-footer-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+        }
+        .embed-footer-text {
+            color: #72767d;
+        }
+        .embed-timestamp {
+            color: #72767d;
+        }
+        .embed-footer-separator {
+            content: ' ';
+            width: 4px;
+            height: 4px;
+            background-color: #72767d;
+            border-radius: 50%;
+            margin: 0 5px;
+            display: none; /* Only show if timestamp is present */
+        }
+        .embed-footer-text + .embed-footer-separator {
+            display: block;
+        }
+        .main-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #status-message {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .io-buttons {
+            display: flex;
+            gap: 10px;
+        }
