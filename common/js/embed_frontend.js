@@ -300,14 +300,14 @@ import { $, $$, loadTranslations, translate, applyTranslations, getGameTime, GAM
             fieldDiv.className = 'field-item';
             fieldDiv.dataset.fieldId = fieldId;
 
-            fieldDiv.innerHTML = `
-                <input type="text" class="field-name" data-i18n-placeholder="field_name_placeholder" value="${escapeMarkdown(name)}">
-                <input type="text" class="field-value" data-i18n-placeholder="field_value_placeholder" value="${escapeMarkdown(value)}">
-                <div class="field-inline-checkbox">
-                    <label><span data-i18n="inline_field_label"></span> <input type="checkbox" class="field-inline" ${inline ? 'checked' : ''}></label>
-                    <button class="remove-field">&times;</button>
+            fieldDiv.innerHTML = "`
+                <input type=\"text\" class=\"field-name\" data-i18n-placeholder=\"field_name_placeholder\" value=\"${escapeMarkdown(name)}\">
+                <input type=\"text\" class=\"field-value\" data-i18n-placeholder=\"field_value_placeholder\" value=\"${escapeMarkdown(value)}\">
+                <div class=\"field-inline-checkbox\">
+                    <label><span data-i18n=\"inline_field_label\"></span> <input type=\"checkbox\" class=\"field-inline\" ${inline ? 'checked' : ''}></label>
+                    <button class=\"remove-field\">&times;</button>
                 </div>
-            `;
+            `";
 
             formElements.fieldsContainer.appendChild(fieldDiv);
 
