@@ -3,7 +3,12 @@ header('Content-Type: application/json');
 
 // !!! IMPORTANT: REPLACE WITH YOUR DISCORD BOT TOKEN !!!
 // You can get this from your Discord Developer Portal -> Your Application -> Bot -> Token
-define('DISCORD_BOT_TOKEN', 'YOUR_DISCORD_BOT_TOKEN_HERE'); 
+$discordBotToken = getenv('DISCORD_TOKEN');
+if ($discordBotToken === false) {
+    // If the environment variable is not set, use a placeholder that will trigger the client-side error.
+    // In a production environment, you might want a more robust error handling or a default value.
+    $discordBotToken = 'DISCORD_TOKEN_NOT_CONFIGURED_IN_ENV';
+} 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = file_get_contents('php://input');
@@ -18,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        if (DISCORD_BOT_TOKEN === 'YOUR_DISCORD_BOT_TOKEN_HERE' || empty(DISCORD_BOT_TOKEN)) {
+        if ($discordBotToken === 'DISCORD_TOKEN_NOT_CONFIGURED_IN_ENV' || empty($discordBotToken)) {
             echo json_encode(['success' => false, 'message' => 'El token del bot de Discord no está configurado en el servidor.']);
             exit;
         }
@@ -28,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ch = curl_init($discordApiUrl);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Content-Type: application/json',
-            'Authorization: Bot ' . DISCORD_BOT_TOKEN
+            'Authorization: Bot ' . $discordBotToken
         ));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
