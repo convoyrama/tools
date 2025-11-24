@@ -761,15 +761,17 @@ import { $, $$, loadTranslations, translate, applyTranslations, getGameTime, GAM
         });
 
         // --- Initial setup ---
-        addField(translate('default_field_name'), translate('default_field_value')); // Add a default field
-        populateProfileSelect(); // Populate profiles on load
-        updateUnixTimestamp(); // Initial calculation for Unix timestamp
-        updateGameTime(); // Initial calculation for game time
-        
-        // Initial language load and apply translations
-        embedLoadTranslations(currentLanguage).then(() => {
-            // applyTranslations is called within embedLoadTranslations now
-            updatePreview(); // Ensure preview is updated after translations
+        document.addEventListener('DOMContentLoaded', () => {
+            addField(translate('default_field_name'), translate('default_field_value')); // Add a default field
+            populateProfileSelect(); // Populate profiles on load
+            updateUnixTimestamp(); // Initial calculation for Unix timestamp
+            updateGameTime(); // Initial calculation for game time
+            
+            // Initial language load and apply translations
+            embedLoadTranslations(currentLanguage).then(() => {
+                // applyTranslations is called within embedLoadTranslations now
+                updatePreview(); // Ensure preview is updated after translations
+            });
         });
 
     </script>
