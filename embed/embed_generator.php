@@ -437,8 +437,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h2>Panel de Control</h2>
 
             <div class="control-group">
+                <h3>Perfiles de Embed</h3>
+                <label for="profile-select">Seleccionar Perfil:</label>
+                <select id="profile-select">
+                    <option value="">-- Nuevo Perfil --</option>
+                </select>
+                <input type="text" id="profile-name-input" placeholder="Nombre del nuevo perfil">
+                <button id="save-profile" style="margin-top: 10px;">Guardar Perfil Actual</button>
+                <button id="load-profile" style="margin-top: 10px;">Cargar Perfil Seleccionado</button>
+                <button id="delete-profile" style="margin-top: 10px; background-color: #f04747;">Eliminar Perfil</button>
+            </div>
+
+            <div class="control-group">
                 <h3>Destino</h3>
                 <input type="text" id="channel-id" placeholder="ID del Canal de Discord">
+            </div>
+
+            <div class="control-group">
+                <h3>Cargar Flyer</h3>
+                <input type="file" id="flyer-upload" accept="image/png">
+                <button id="load-flyer-data" style="margin-top: 10px;">Cargar Datos del Flyer</button>
             </div>
 
             <div class="control-group">
@@ -476,6 +494,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <input type="text" id="footer-text" placeholder="Texto del Pie de Página">
                 <input type="text" id="footer-icon-url" placeholder="URL del Icono del Pie de Página">
                 <label><input type="checkbox" id="timestamp"> Mostrar Marca de Tiempo</label>
+            </div>
+
+            <div class="control-group">
+                <h3>Marca de Tiempo Unix</h3>
+                <label for="unix-date">Fecha:</label>
+                <input type="date" id="unix-date">
+                <label for="unix-time">Hora (UTC):</label>
+                <input type="time" id="unix-time" step="1">
+                <label for="unix-timestamp-display">Unix Timestamp (segundos):</label>
+                <input type="text" id="unix-timestamp-display" readonly>
+                <button id="copy-unix-timestamp" style="margin-top: 5px;">Copiar Timestamp</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Hora en el Juego (Game Time)</h3>
+                <label for="game-time-display">Hora In-Game:</label>
+                <input type="text" id="game-time-display" readonly>
+                <button id="copy-game-time" style="margin-top: 5px;">Copiar Hora In-Game</button>
             </div>
 
             <div class="control-group main-actions">
@@ -555,7 +591,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             statusMessage: $('#status-message'),
             ioCode: $('#io-code'),
             getCodeBtn: $('#get-code'),
-            loadCodeBtn: $('#load-code')
+            loadCodeBtn: $('#load-code'),
+            flyerUpload: $('#flyer-upload'),
+            loadFlyerDataBtn: $('#load-flyer-data'),
+            unixDate: $('#unix-date'),
+            unixTime: $('#unix-time'),
+            unixTimestampDisplay: $('#unix-timestamp-display'),
+            copyUnixTimestampBtn: $('#copy-unix-timestamp'),
+            gameTimeDisplay: $('#game-time-display'),
+            copyGameTimeBtn: $('#copy-game-time'),
+            profileSelect: $('#profile-select'),
+            profileNameInput: $('#profile-name-input'),
+            saveProfileBtn: $('#save-profile'),
+            loadProfileBtn: $('#load-profile'),
+            deleteProfileBtn: $('#delete-profile')
         };
 
         const previewElements = {
@@ -600,6 +649,220 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return text
                 .replace(/\\/g, '\\\\') // Escape backslashes first
                 .replace(/([*_~`|>])/g, '\\$1'); // Escape Discord special characters
+        }
+
+        /**
+         * Reads tEXt chunks from a PNG ArrayBuffer.
+         * Assumes the PNG is valid and focuses only on tEXt chunks.
+         * @param {ArrayBuffer} arrayBuffer - The ArrayBuffer of the PNG file.
+         * @returns {Array<Object>} An array of objects, each with { keyword: string, text: string }.
+         */
+        function readPngTextChunks(arrayBuffer) {
+            const dataView = new DataView(arrayBuffer);
+            let offset = 8; // Skip PNG signature (8 bytes)
+            const textChunks = [];
+
+            while (offset < arrayBuffer.byteLength) {
+                if (offset + 8 > arrayBuffer.byteLength) break; // Ensure there's enough data for chunk length and type
+                
+                const length = dataView.getUint32(offset, false); // Length is big-endian
+                offset += 4;
+
+                if (offset + 4 > arrayBuffer.byteLength) break; // Ensure there's enough data for chunk type
+                const typeCode = String.fromCharCode(
+                    dataView.getUint8(offset),
+                    dataView.getUint8(offset + 1),
+                    dataView.getUint8(offset + 2),
+                    dataView.getUint8(offset + 3)
+                );
+                offset += 4;
+
+                const chunkDataEnd = offset + length;
+                if (chunkDataEnd > arrayBuffer.byteLength) break; // Ensure chunk data doesn't exceed file length
+
+                if (typeCode === 'tEXt') {
+                    let keyword = '';
+                    let text = '';
+                    let nullSeparatorFound = false;
+
+                    for (let i = 0; i < length; i++) {
+                        const byte = dataView.getUint8(offset + i);
+                        if (byte === 0 && !nullSeparatorFound) {
+                            nullSeparatorFound = true;
+                            continue;
+                        }
+                        if (!nullSeparatorFound) {
+                            keyword += String.fromCharCode(byte);
+                        } else {
+                            text += String.fromCharCode(byte);
+                        }
+                    }
+                    if (keyword && text) { // Only add if both keyword and text are non-empty
+                        textChunks.push({ keyword, text });
+                    }
+                }
+                
+                offset = chunkDataEnd + 4; // Move past data and 4-byte CRC
+            }
+            return textChunks;
+        }
+
+        function updateUnixTimestamp() {
+            const dateStr = formElements.unixDate.value;
+            const timeStr = formElements.unixTime.value;
+
+            if (dateStr && timeStr) {
+                // Combine date and time, assuming UTC for the input
+                // The 'Z' at the end indicates UTC
+                const dateTimeUTC = new Date(`${dateStr}T${timeStr}:00Z`);
+                
+                // Check if the date is valid
+                if (!isNaN(dateTimeUTC.getTime())) {
+                    const unixTimestampSeconds = Math.floor(dateTimeUTC.getTime() / 1000);
+                    formElements.unixTimestampDisplay.value = unixTimestampSeconds;
+                    formElements.statusMessage.textContent = '';
+                    formElements.statusMessage.style.color = '';
+                } else {
+                    formElements.unixTimestampDisplay.value = '';
+                    formElements.statusMessage.textContent = 'Fecha u hora inválida.';
+                    formElements.statusMessage.style.color = '#f04747';
+                }
+            } else {
+                formElements.unixTimestampDisplay.value = '';
+                formElements.statusMessage.textContent = '';
+                formElements.statusMessage.style.color = '';
+            }
+            updateGameTime(); // Also update game time when Unix timestamp changes
+        }
+
+        // --- In-Game Time Calculation ---
+        const GAME_TIME_ANCHOR_UTC_MINUTES = 20 * 60 + 40; // 20:40 UTC
+        const TIME_SCALE = 6; // Game time is 6x faster than real time
+
+        function getGameTime(realWorldUtcDate) {
+            if (!realWorldUtcDate || isNaN(realWorldUtcDate.getTime())) {
+                return ''; // Return empty if date is invalid
+            }
+            const realWorldUtcMinutes = realWorldUtcDate.getUTCHours() * 60 + realWorldUtcDate.getUTCMinutes();
+            // Ensure positive result for modulo by adding 1440 (minutes in a day)
+            const differenceInMinutes = (realWorldUtcMinutes - GAME_TIME_ANCHOR_UTC_MINUTES + 1440) % 1440; 
+            const gameTimeMinutes = (differenceInMinutes * TIME_SCALE) % 1440;
+
+            const gameHours = Math.floor(gameTimeMinutes / 60);
+            const gameMinutes = Math.floor(gameTimeMinutes % 60);
+
+            return `${String(gameHours).padStart(2, '0')}:${String(gameMinutes).padStart(2, '0')}`;
+        }
+
+        function updateGameTime() {
+            const dateStr = formElements.unixDate.value;
+            const timeStr = formElements.unixTime.value;
+
+            if (dateStr && timeStr) {
+                const dateTimeUTC = new Date(`${dateStr}T${timeStr}:00Z`);
+                formElements.gameTimeDisplay.value = getGameTime(dateTimeUTC);
+            } else {
+                formElements.gameTimeDisplay.value = '';
+            }
+        }
+
+        // --- Profile Management ---
+        const LOCAL_STORAGE_PREFIX = 'embed_profile_';
+
+        function populateProfileSelect() {
+            formElements.profileSelect.innerHTML = '<option value="">-- Nuevo Perfil --</option>'; // Always have "New Profile" option
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(LOCAL_STORAGE_PREFIX)) {
+                    const profileName = key.substring(LOCAL_STORAGE_PREFIX.length);
+                    const option = document.createElement('option');
+                    option.value = profileName;
+                    option.textContent = profileName;
+                    formElements.profileSelect.appendChild(option);
+                }
+            }
+            formElements.profileNameInput.value = ''; // Clear input field
+        }
+
+        function saveProfile() {
+            let profileName = formElements.profileNameInput.value.trim();
+            if (!profileName) {
+                profileName = formElements.profileSelect.value;
+            }
+
+            if (!profileName) {
+                formElements.statusMessage.textContent = 'Por favor, introduce un nombre para el perfil.';
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            const embedData = getEmbedData(false); // Get raw embed object
+            if (Object.keys(embedData).length === 0) {
+                formElements.statusMessage.textContent = 'No hay datos de embed para guardar en el perfil.';
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            try {
+                localStorage.setItem(LOCAL_STORAGE_PREFIX + profileName, JSON.stringify(embedData));
+                formElements.statusMessage.textContent = `Perfil '${profileName}' guardado exitosamente.`;
+                formElements.statusMessage.style.color = '#43b581';
+                populateProfileSelect();
+                formElements.profileSelect.value = profileName; // Select the newly saved profile
+            } catch (e) {
+                formElements.statusMessage.textContent = 'Error al guardar el perfil.';
+                formElements.statusMessage.style.color = '#f04747';
+                console.error('Error saving profile:', e);
+            }
+        }
+
+        function loadProfile() {
+            const profileName = formElements.profileSelect.value;
+            if (!profileName) {
+                formElements.statusMessage.textContent = 'Por favor, selecciona un perfil para cargar.';
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            try {
+                const storedData = localStorage.getItem(LOCAL_STORAGE_PREFIX + profileName);
+                if (storedData) {
+                    const embed = JSON.parse(storedData);
+                    loadEmbedData(embed);
+                    formElements.statusMessage.textContent = `Perfil '${profileName}' cargado exitosamente.`;
+                    formElements.statusMessage.style.color = '#43b581';
+                    formElements.profileNameInput.value = profileName;
+                } else {
+                    formElements.statusMessage.textContent = 'El perfil seleccionado no existe.';
+                    formElements.statusMessage.style.color = '#f04747';
+                }
+            } catch (e) {
+                formElements.statusMessage.textContent = 'Error al cargar el perfil.';
+                formElements.statusMessage.style.color = '#f04747';
+                console.error('Error loading profile:', e);
+            }
+        }
+
+        function deleteProfile() {
+            const profileName = formElements.profileSelect.value;
+            if (!profileName) {
+                formElements.statusMessage.textContent = 'Por favor, selecciona un perfil para eliminar.';
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            if (confirm(`¿Estás seguro de que quieres eliminar el perfil '${profileName}'?`)) {
+                try {
+                    localStorage.removeItem(LOCAL_STORAGE_PREFIX + profileName);
+                    formElements.statusMessage.textContent = `Perfil '${profileName}' eliminado exitosamente.`;
+                    formElements.statusMessage.style.color = '#43b581';
+                    populateProfileSelect();
+                } catch (e) {
+                    formElements.statusMessage.textContent = 'Error al eliminar el perfil.';
+                    formElements.statusMessage.style.color = '#f04747';
+                    console.error('Error deleting profile:', e);
+                }
+            }
         }
 
         // --- Field Management ---
@@ -708,7 +971,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Footer
             const hasFooterText = embed.footer && embed.footer.text;
             const hasFooterIcon = embed.footer && isValidHttpUrl(embed.footer.icon_url);
-            const hasTimestamp = embed.timestamp;
+            const hasTimestamp = formElements.timestamp.checked; // Check the form element directly
 
             if (hasFooterText || hasFooterIcon || hasTimestamp) {
                 previewElements.footer.style.display = 'flex';
@@ -717,7 +980,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 previewElements.footerIcon.style.display = hasFooterIcon ? 'block' : 'none';
 
                 if (hasTimestamp) {
-                    previewElements.timestamp.textContent = new Date().toLocaleString('es-ES', {hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'});
+                    const unixTimestampValue = formElements.unixTimestampDisplay.value;
+                    let displayTime = '';
+                    if (unixTimestampValue) {
+                        // Display the user-entered/calculated Unix timestamp
+                        displayTime = new Date(parseInt(unixTimestampValue) * 1000).toLocaleString('es-ES', {
+                            hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
+                        });
+                    } else {
+                        // Fallback to current time if timestamp checkbox is checked but no unix timestamp is set
+                        displayTime = new Date().toLocaleString('es-ES', {
+                            hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric'
+                        });
+                    }
+                    previewElements.timestamp.textContent = displayTime;
                     previewElements.timestamp.style.display = 'block';
                 } else {
                     previewElements.timestamp.style.display = 'none';
@@ -783,66 +1059,210 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             const footerText = formElements.footerText.value.trim();
             const footerIconUrl = formElements.footerIconUrl.value.trim();
-            const timestampChecked = formElements.timestamp.checked;
-            if (footerText || footerIconUrl || timestampChecked) {
-                embed.footer = {};
-                if (footerText) embed.footer.text = footerText;
-                if (isValidHttpUrl(footerIconUrl)) embed.footer.icon_url = footerIconUrl;
-            }
-            if (timestampChecked) embed.timestamp = new Date(); // Discord API accepts ISO 8601 timestamp
-
-            return forDiscordApi ? { embeds: [embed] } : embed;
-        }
-
-        // --- Load Embed Data into Form ---
-        function loadEmbedData(embed) {
-            formElements.authorName.value = embed.author?.name || '';
-            formElements.authorUrl.value = embed.author?.url || '';
-            formElements.authorIconUrl.value = embed.author?.icon_url || '';
-            formElements.title.value = embed.title || '';
-            formElements.url.value = embed.url || '';
-            formElements.description.value = embed.description || '';
-            formElements.color.value = embed.color ? '#' + embed.color.toString(16).padStart(6, '0') : '#ffffff';
-
-            // Clear existing fields and add new ones
-            formElements.fieldsContainer.innerHTML = '';
-            embed.fields?.forEach(field => addField(field.name, field.value, field.inline));
-
-            formElements.thumbnailUrl.value = embed.thumbnail?.url || '';
-            formElements.imageUrl.value = embed.image?.url || '';
-            formElements.footerText.value = embed.footer?.text || '';
-            formElements.footerIconUrl.value = embed.footer?.icon_url || '';
-            formElements.timestamp.checked = !!embed.timestamp; // Convert truthy value to boolean
-
-            updatePreview();
-        }
-
-        // --- Event Listeners ---
-        // Inputs for live preview
-        $$('.controls input, .controls textarea').forEach(input => {
-            if (input.id !== 'io-code') { // Exclude the code input itself
-                input.addEventListener('input', updatePreview);
-            }
-        });
-        formElements.timestamp.addEventListener('change', updatePreview);
-        formElements.addFieldBtn.addEventListener('click', () => addField());
-
-        // --- Code Generation/Loading (Task 5) ---
-        formElements.getCodeBtn.addEventListener('click', () => {
-            const embedData = getEmbedData(false); // Get raw embed object
-            if (Object.keys(embedData).length === 0) {
-                formElements.statusMessage.textContent = 'No hay datos de embed para guardar.';
-                formElements.statusMessage.style.color = '#f04747';
-                return;
-            }
-            const jsonString = JSON.stringify(embedData);
-            formElements.ioCode.value = btoa(jsonString); // Base64 encode
-            formElements.statusMessage.textContent = 'Código generado, cópialo para guardar.';
-            formElements.statusMessage.style.color = '#43b581';
-            formElements.ioCode.select(); // Select the text for easy copying
-            document.execCommand('copy');
-        });
-
+                        const timestampChecked = formElements.timestamp.checked;
+                        if (footerText || footerIconUrl || timestampChecked) {
+                            embed.footer = {};
+                            if (footerText) embed.footer.text = footerText;
+                            if (isValidHttpUrl(footerIconUrl)) embed.footer.icon_url = footerIconUrl;
+                        }
+                        if (timestampChecked && formElements.unixTimestampDisplay.value) {
+                             // Use the Unix timestamp from the input field
+                            embed.timestamp = new Date(parseInt(formElements.unixTimestampDisplay.value) * 1000).toISOString();
+                        } else if (timestampChecked) {
+                            // Fallback to current time if checkbox is checked but no unix timestamp
+                            embed.timestamp = new Date().toISOString();
+                        }
+            
+                        return forDiscordApi ? { embeds: [embed] } : embed;
+                    }
+            
+                    // --- Load Embed Data into Form ---
+                    function loadEmbedData(embed) {
+                        formElements.authorName.value = embed.author?.name || '';
+                        formElements.authorUrl.value = embed.author?.url || '';
+                        formElements.authorIconUrl.value = embed.author?.icon_url || '';
+                        formElements.title.value = embed.title || '';
+                        formElements.url.value = embed.url || '';
+                        formElements.description.value = embed.description || '';
+                        formElements.color.value = embed.color ? '#' + embed.color.toString(16).padStart(6, '0') : '#ffffff';
+            
+                        // Clear existing fields and add new ones
+                        formElements.fieldsContainer.innerHTML = '';
+                        embed.fields?.forEach(field => addField(field.name, field.value, field.inline));
+            
+                        formElements.thumbnailUrl.value = embed.thumbnail?.url || '';
+                        formElements.imageUrl.value = embed.image?.url || '';
+                        formElements.footerText.value = embed.footer?.text || '';
+                        formElements.footerIconUrl.value = embed.footer?.icon_url || '';
+                        
+                        // Handle timestamp loading
+                        if (embed.timestamp) {
+                            formElements.timestamp.checked = true; // Check the display timestamp checkbox
+                            const date = new Date(embed.timestamp);
+                            // Format date to YYYY-MM-DD for input type="date"
+                            formElements.unixDate.value = date.toISOString().split('T')[0];
+                            // Format time to HH:MM:SS for input type="time"
+                            formElements.unixTime.value = date.toISOString().split('T')[1].substring(0, 8);
+                            updateUnixTimestamp(); // Update the displayed Unix timestamp
+                        } else {
+                            formElements.timestamp.checked = false;
+                            formElements.unixDate.value = '';
+                            formElements.unixTime.value = '';
+                            formElements.unixTimestampDisplay.value = '';
+                        }
+            
+                        updatePreview();
+                    }
+            
+                    // --- Event Listeners ---
+                    // Inputs for live preview
+                    $$('.controls input, .controls textarea').forEach(input => {
+                        if (input.id !== 'io-code') { // Exclude the code input itself
+                            input.addEventListener('input', updatePreview);
+                        }
+                    });
+                    formElements.timestamp.addEventListener('change', updatePreview);
+                    formElements.addFieldBtn.addEventListener('click', () => addField());
+            
+                    formElements.loadFlyerDataBtn.addEventListener('click', () => {
+                        const file = formElements.flyerUpload.files[0];
+                        if (!file) {
+                            formElements.statusMessage.textContent = 'Por favor, selecciona un archivo PNG.';
+                            formElements.statusMessage.style.color = '#f04747';
+                            return;
+                        }
+            
+                        if (file.type !== 'image/png') {
+                            formElements.statusMessage.textContent = 'El archivo seleccionado no es un PNG.';
+                            formElements.statusMessage.style.color = '#f04747';
+                            return;
+                        }
+            
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                const arrayBuffer = e.target.result;
+                                const textChunks = readPngTextChunks(arrayBuffer);
+                                const eventDataChunk = textChunks.find(chunk => chunk.keyword === 'convoyrama-event-data');
+            
+                                if (eventDataChunk) {
+                                    const eventData = JSON.parse(eventDataChunk.text);
+                                    // Convert eventData to a format suitable for loadEmbedData if necessary
+                                    // For now, assume it directly maps or requires minimal transformation
+                                    const embedFromFlyer = {
+                                        author: { name: eventData.authorName || '' },
+                                        title: eventData.eventName || '',
+                                        description: eventData.description || '',
+                                        color: eventData.color ? hexToDec(eventData.color) : undefined, // Convert hex to decimal
+                                        image: { url: eventData.mapImageUrl || eventData.imageUrl || '' }, // Assuming mapImageUrl or imageUrl from flyer
+                                        fields: eventData.fields || [],
+                                        timestamp: eventData.timestamp || undefined, // Pass timestamp if available
+                                        // Placeholder for other fields if needed from flyer data
+                                    };
+            
+                                    // Populate the channel ID if present in the flyer data (less likely but possible)
+                                    if (eventData.channelId) {
+                                        formElements.channelId.value = eventData.channelId;
+                                    }
+                                    
+                                    loadEmbedData(embedFromFlyer);
+                                    formElements.statusMessage.textContent = 'Datos del flyer cargados exitosamente.';
+                                    formElements.statusMessage.style.color = '#43b581';
+            
+                                } else {
+                                    formElements.statusMessage.textContent = 'No se encontraron datos de evento en el flyer.';
+                                    formElements.statusMessage.style.color = '#f04747';
+                                }
+                            } catch (error) {
+                                formElements.statusMessage.textContent = 'Error al procesar el flyer: ' + error.message;
+                                formElements.statusMessage.style.color = '#f04747';
+                                console.error('Error processing flyer:', error);
+                            }
+                        };
+                        reader.onerror = () => {
+                            formElements.statusMessage.textContent = 'Error al leer el archivo.';
+                            formElements.statusMessage.style.color = '#f04747';
+                        };
+                                                reader.readAsArrayBuffer(file);
+                                            });
+                                    
+                                            // Event listeners for Unix timestamp calculation
+                                            formElements.unixDate.addEventListener('input', () => {
+                                                updateUnixTimestamp();
+                                                updateGameTime();
+                                            });
+                                            formElements.unixTime.addEventListener('input', () => {
+                                                updateUnixTimestamp();
+                                                updateGameTime();
+                                            });
+                                    
+                                            formElements.copyUnixTimestampBtn.addEventListener('click', () => {
+                                                const timestamp = formElements.unixTimestampDisplay.value;
+                                                if (timestamp) {
+                                                    navigator.clipboard.writeText(timestamp)
+                                                        .then(() => {
+                                                            formElements.statusMessage.textContent = 'Timestamp copiado al portapapeles.';
+                                                            formElements.statusMessage.style.color = '#43b581';
+                                                        })
+                                                        .catch(err => {
+                                                            formElements.statusMessage.textContent = 'Error al copiar el timestamp.';
+                                                            formElements.statusMessage.style.color = '#f04747';
+                                                            console.error('Error copying timestamp:', err);
+                                                        });
+                                                } else {
+                                                    formElements.statusMessage.textContent = 'No hay timestamp para copiar.';
+                                                    formElements.statusMessage.style.color = '#f04747';
+                                                }
+                                            });
+                                    
+                                            formElements.copyGameTimeBtn.addEventListener('click', () => {
+                                                const gameTime = formElements.gameTimeDisplay.value;
+                                                if (gameTime) {
+                                                    navigator.clipboard.writeText(gameTime)
+                                                        .then(() => {
+                                                            formElements.statusMessage.textContent = 'Hora in-game copiada al portapapeles.';
+                                                            formElements.statusMessage.style.color = '#43b581';
+                                                        })
+                                                        .catch(err => {
+                                                            formElements.statusMessage.textContent = 'Error al copiar la hora in-game.';
+                                                            formElements.statusMessage.style.color = '#f04747';
+                                                            console.error('Error copying game time:', err);
+                                                        });
+                                                } else {
+                                                    formElements.statusMessage.textContent = 'No hay hora in-game para copiar.';
+                                                    formElements.statusMessage.style.color = '#f04747';
+                                                }
+                                            });
+                                    
+                                            // Event listeners for profile management
+                                            formElements.saveProfileBtn.addEventListener('click', saveProfile);
+                                            formElements.loadProfileBtn.addEventListener('click', loadProfile);
+                                            formElements.deleteProfileBtn.addEventListener('click', deleteProfile);
+                                    
+                                            formElements.profileSelect.addEventListener('change', () => {
+                                                if (formElements.profileSelect.value === '') {
+                                                    formElements.profileNameInput.value = ''; // Clear input for new profile
+                                                } else {
+                                                    formElements.profileNameInput.value = formElements.profileSelect.value; // Show selected profile name
+                                                }
+                                            });
+                                    
+                                    
+                                            // --- Code Generation/Loading (Task 5) ---
+                                            formElements.getCodeBtn.addEventListener('click', () => {
+                                                const embedData = getEmbedData(false); // Get raw embed object
+                                                if (Object.keys(embedData).length === 0) {
+                                                    formElements.statusMessage.textContent = 'No hay datos de embed para guardar.';
+                                                    formElements.statusMessage.style.color = '#f04747';
+                                                    return;
+                                                }
+                                                const jsonString = JSON.stringify(embedData);
+                                                formElements.ioCode.value = btoa(jsonString); // Base64 encode
+                                                formElements.statusMessage.textContent = 'Código generado, cópialo para guardar.';
+                                                formElements.statusMessage.style.color = '#43b581';
+                                                formElements.ioCode.select(); // Select the text for easy copying
+                                                document.execCommand('copy');
+                                            });
         formElements.loadCodeBtn.addEventListener('click', () => {
             const encodedData = formElements.ioCode.value.trim();
             if (!encodedData) {
@@ -915,6 +1335,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // --- Initial setup ---
         addField('Campo 1', 'Valor del campo 1'); // Add a default field
+        populateProfileSelect(); // Populate profiles on load
+        updateUnixTimestamp(); // Initial calculation for Unix timestamp
+        updateGameTime(); // Initial calculation for game time
         updatePreview();
 
     </script>
