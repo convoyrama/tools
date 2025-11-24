@@ -1,73 +1,9 @@
-<?php
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json');
-}
-
-
-// !!! IMPORTANT: REPLACE WITH YOUR DISCORD BOT TOKEN !!!
-// You can get this from your Discord Developer Portal -> Your Application -> Bot -> Token
-$discordBotToken = getenv('DISCORD_TOKEN');
-if ($discordBotToken === false) {
-    // If the environment variable is not set, use a placeholder that will trigger the client-side error.
-    // In a production environment, you might want a more robust error handling or a default value.
-    $discordBotToken = 'DISCORD_TOKEN_NOT_CONFIGURED_IN_ENV';
-} 
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-
-    if (isset($data['action']) && $data['action'] === 'send_embed') {
-        $channelId = $data['channel_id'] ?? null;
-        $embedData = $data['embed_data'] ?? null;
-
-        if (empty($channelId) || empty($embedData)) {
-            echo json_encode(['success' => false, 'message' => 'Faltan ID del canal o datos del embed.']);
-            exit;
-        }
-
-        if ($discordBotToken === 'DISCORD_TOKEN_NOT_CONFIGURED_IN_ENV' || empty($discordBotToken)) {
-            echo json_encode(['success' => false, 'message' => 'El token del bot de Discord no está configurado en el servidor.']);
-            exit;
-        }
-
-        $discordApiUrl = "https://discord.com/api/v10/channels/{$channelId}/messages";
-
-        $ch = curl_init($discordApiUrl);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-            'Authorization: Bot ' . $discordBotToken
-        ));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($embedData));
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if ($response === false) {
-            echo json_encode(['success' => false, 'message' => 'Error de cURL: ' . $error]);
-        } else {
-            $responseData = json_decode($response, true);
-            if ($httpCode >= 200 && $httpCode < 300) {
-                echo json_encode(['success' => true, 'message' => 'Embed enviado exitosamente!', 'response' => $responseData]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Error al enviar embed a Discord.', 'status_code' => $httpCode, 'response' => $responseData]);
-            }
-        }
-        exit;
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Embeds para Discord</title>
+    <title data-i18n="app_title"></title>
     <style>
         body {
             font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -434,97 +370,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
         <div class="app-container">
         <div class="controls">
-            <h2>Panel de Control</h2>
-
             <div class="control-group">
-                <h3>Perfiles de Embed</h3>
-                <label for="profile-select">Seleccionar Perfil:</label>
-                <select id="profile-select">
-                    <option value="">-- Nuevo Perfil --</option>
+                <h3 data-i18n="language_title"></h3>
+                <label for="language-select" data-i18n="select_language_label"></label>
+                <select id="language-select">
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                    <option value="pt">Português</option>
                 </select>
-                <input type="text" id="profile-name-input" placeholder="Nombre del nuevo perfil">
-                <button id="save-profile" style="margin-top: 10px;">Guardar Perfil Actual</button>
-                <button id="load-profile" style="margin-top: 10px;">Cargar Perfil Seleccionado</button>
-                <button id="delete-profile" style="margin-top: 10px; background-color: #f04747;">Eliminar Perfil</button>
+            </div>
+            <h2 data-i18n="control_panel_title"></h2>
+
+            <div class="control-group">
+                <h3 data-i18n="embed_profiles_title"></h3>
+                <label for="profile-select" data-i18n="select_profile_label"></label>
+                <select id="profile-select">
+                    <option value="" data-i18n="new_profile_option"></option>
+                </select>
+                <input type="text" id="profile-name-input" data-i18n-placeholder="new_profile_placeholder">
+                <button id="save-profile" style="margin-top: 10px;" data-i18n="save_profile_button"></button>
+                <button id="load-profile" style="margin-top: 10px;" data-i18n="load_profile_button"></button>
+                <button id="delete-profile" style="margin-top: 10px; background-color: #f04747;" data-i18n="delete_profile_button"></button>
             </div>
 
             <div class="control-group">
-                <h3>Destino</h3>
-                <input type="text" id="channel-id" placeholder="ID del Canal de Discord">
+                <h3 data-i18n="destination_title"></h3>
+                <input type="text" id="channel-id" data-i18n-placeholder="channel_id_placeholder">
             </div>
 
             <div class="control-group">
-                <h3>Cargar Flyer</h3>
+                <h3 data-i18n="load_flyer_title"></h3>
                 <input type="file" id="flyer-upload" accept="image/png">
-                <button id="load-flyer-data" style="margin-top: 10px;">Cargar Datos del Flyer</button>
+                <button id="load-flyer-data" style="margin-top: 10px;" data-i18n="load_flyer_button"></button>
             </div>
 
             <div class="control-group">
-                <h3>Autor</h3>
-                <input type="text" id="author-name" placeholder="Nombre del Autor">
-                <input type="text" id="author-url" placeholder="URL del Autor">
-                <input type="text" id="author-icon-url" placeholder="URL del Icono del Autor">
+                <h3 data-i18n="author_title"></h3>
+                <input type="text" id="author-name" data-i18n-placeholder="author_name_placeholder">
+                <input type="text" id="author-url" data-i18n-placeholder="author_url_placeholder">
+                <input type="text" id="author-icon-url" data-i18n-placeholder="author_icon_url_placeholder">
             </div>
 
             <div class="control-group">
-                <h3>Embed Principal</h3>
-                <input type="text" id="title" placeholder="Título">
-                <input type="text" id="url" placeholder="URL del Título">
-                <textarea id="description" placeholder="Descripción (acepta Markdown de Discord)"></textarea>
-                <label for="color">Color de la Barra Lateral</label>
+                <h3 data-i18n="main_embed_title"></h3>
+                <input type="text" id="title" data-i18n-placeholder="title_placeholder">
+                <input type="text" id="url" data-i18n-placeholder="url_placeholder">
+                <textarea id="description" data-i18n-placeholder="description_placeholder"></textarea>
+                <label for="color" data-i18n="color_label"></label>
                 <input type="color" id="color" value="#ffffff">
             </div>
             
             <div class="control-group">
-                <h3>Campos (Fields)</h3>
+                <h3 data-i18n="fields_title"></h3>
                 <div id="fields-container">
                     <!-- Dynamic fields will be added here -->
                 </div>
-                <button id="add-field">Añadir Campo</button>
+                <button id="add-field" data-i18n="add_field_button"></button>
             </div>
 
             <div class="control-group">
-                <h3>Imágenes</h3>
-                <input type="text" id="thumbnail-url" placeholder="URL de la Miniatura (Thumbnail)">
-                <input type="text" id="image-url" placeholder="URL de la Imagen Principal">
+                <h3 data-i18n="images_title"></h3>
+                <input type="text" id="thumbnail-url" data-i18n-placeholder="thumbnail_url_placeholder">
+                <input type="text" id="image-url" data-i18n-placeholder="image_url_placeholder">
             </div>
 
             <div class="control-group">
-                <h3>Pie de Página (Footer)</h3>
-                <input type="text" id="footer-text" placeholder="Texto del Pie de Página">
-                <input type="text" id="footer-icon-url" placeholder="URL del Icono del Pie de Página">
-                <label><input type="checkbox" id="timestamp"> Mostrar Marca de Tiempo</label>
+                <h3 data-i18n="footer_title"></h3>
+                <input type="text" id="footer-text" data-i18n-placeholder="footer_text_placeholder">
+                <input type="text" id="footer-icon-url" data-i18n-placeholder="footer_icon_url_placeholder">
+                <label><input type="checkbox" id="timestamp"> <span data-i18n="show_timestamp_label"></span></label>
             </div>
 
             <div class="control-group">
-                <h3>Marca de Tiempo Unix</h3>
-                <label for="unix-date">Fecha:</label>
+                <h3 data-i18n="unix_timestamp_title"></h3>
+                <label for="unix-date" data-i18n="date_label"></label>
                 <input type="date" id="unix-date">
-                <label for="unix-time">Hora (UTC):</label>
+                <label for="unix-time" data-i18n="time_label"></label>
                 <input type="time" id="unix-time" step="1">
-                <label for="unix-timestamp-display">Unix Timestamp (segundos):</label>
+                <label for="unix-timestamp-display" data-i18n="unix_timestamp_display_label"></label>
                 <input type="text" id="unix-timestamp-display" readonly>
-                <button id="copy-unix-timestamp" style="margin-top: 5px;">Copiar Timestamp</button>
+                <button id="copy-unix-timestamp" style="margin-top: 5px;" data-i18n="copy_timestamp_button"></button>
             </div>
 
             <div class="control-group">
-                <h3>Hora en el Juego (Game Time)</h3>
-                <label for="game-time-display">Hora In-Game:</label>
+                <h3 data-i18n="game_time_title"></h3>
+                <label for="game-time-display" data-i18n="game_time_display_label"></label>
                 <input type="text" id="game-time-display" readonly>
-                <button id="copy-game-time" style="margin-top: 5px;">Copiar Hora In-Game</button>
+                <button id="copy-game-time" style="margin-top: 5px;" data-i18n="copy_game_time_button"></button>
             </div>
 
             <div class="control-group main-actions">
-                <button id="send-embed">Enviar Embed</button>
+                <button id="send-embed" data-i18n="send_embed_button"></button>
                 <p id="status-message"></p>
             </div>
 
             <div class="control-group-io">
-                <h3>Guardar/Cargar Diseño</h3>
-                <textarea id="io-code" placeholder="Pega un código para cargar un diseño..."></textarea>
+                <h3 data-i18n="save_load_design_title"></h3>
+                <textarea id="io-code" data-i18n-placeholder="io_code_placeholder"></textarea>
                 <div class="io-buttons">
-                    <button id="get-code">Obtener Código para Guardar</button>
-                    <button id="load-code">Cargar desde Código</button>
+                    <button id="get-code" data-i18n="get_code_button"></button>
+                    <button id="load-code" data-i18n="load_code_button"></button>
                 </div>
             </div>
         </div>
@@ -567,64 +512,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
+        // --- i18n Utility ---
+        let currentLanguage = localStorage.getItem('selectedLanguage') || 'es'; // Default to Spanish
+        let translations = {};
+
+        async function loadTranslations(lang) {
+            try {
+                const response = await fetch(`./locales/${lang}.json`);
+                translations = await response.json();
+                currentLanguage = lang;
+                localStorage.setItem('selectedLanguage', lang);
+            } catch (error) {
+                console.error(`Error loading translations for ${lang}:`, error);
+                // Fallback to default language if loading fails
+                if (lang !== 'es') {
+                    await loadTranslations('es');
+                } else {
+                    translations = {}; // No translations available
+                }
+            }
+        }
+
+        function translate(key, replacements = {}) {
+            let text = translations[key] || key; // Fallback to key if translation not found
+            for (const placeholder in replacements) {
+                text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+            }
+            return text;
+        }
+
         const $ = selector => document.querySelector(selector);
         const $$ = selector => document.querySelectorAll(selector);
 
         // Elements
         const formElements = {
-            channelId: $('#channel-id'),
-            authorName: $('#author-name'),
-            authorUrl: $('#author-url'),
-            authorIconUrl: $('#author-icon-url'),
-            title: $('#title'),
-            url: $('#url'),
-            description: $('#description'),
-            color: $('#color'),
-            thumbnailUrl: $('#thumbnail-url'),
-            imageUrl: $('#image-url'),
-            footerText: $('#footer-text'),
-            footerIconUrl: $('#footer-icon-url'),
-            timestamp: $('#timestamp'),
-            fieldsContainer: $('#fields-container'),
-            addFieldBtn: $('#add-field'),
-            sendEmbedBtn: $('#send-embed'),
-            statusMessage: $('#status-message'),
-            ioCode: $('#io-code'),
-            getCodeBtn: $('#get-code'),
-            loadCodeBtn: $('#load-code'),
-            flyerUpload: $('#flyer-upload'),
-            loadFlyerDataBtn: $('#load-flyer-data'),
-            unixDate: $('#unix-date'),
-            unixTime: $('#unix-time'),
-            unixTimestampDisplay: $('#unix-timestamp-display'),
-            copyUnixTimestampBtn: $('#copy-unix-timestamp'),
-            gameTimeDisplay: $('#game-time-display'),
-            copyGameTimeBtn: $('#copy-game-time'),
-            profileSelect: $('#profile-select'),
-            profileNameInput: $('#profile-name-input'),
-            saveProfileBtn: $('#save-profile'),
-            loadProfileBtn: $('#load-profile'),
-            deleteProfileBtn: $('#delete-profile')
+            languageSelect: $('#language-select'),
+            channelId: $("#channel-id"),
+            authorName: $("#author-name"),
+            authorUrl: $("#author-url"),
+            authorIconUrl: $("#author-icon-url"),
+            title: $("#title"),
+            url: $("#url"),
+            description: $("#description"),
+            color: $("#color"),
+            thumbnailUrl: $("#thumbnail-url"),
+            imageUrl: $("#image-url"),
+            footerText: $("#footer-text"),
+            footerIconUrl: $("#footer-icon-url"),
+            timestamp: $("#timestamp"),
+            fieldsContainer: $("#fields-container"),
+            addFieldBtn: $("#add-field"),
+            sendEmbedBtn: $("#send-embed"),
+            statusMessage: $("#status-message"),
+            ioCode: $("#io-code"),
+            getCodeBtn: $("#get-code"),
+            loadCodeBtn: $("#load-code"),
+            flyerUpload: $("#flyer-upload"),
+            loadFlyerDataBtn: $("#load-flyer-data"),
+            unixDate: $("#unix-date"),
+            unixTime: $("#unix-time"),
+            unixTimestampDisplay: $("#unix-timestamp-display"),
+            copyUnixTimestampBtn: $("#copy-unix-timestamp"),
+            gameTimeDisplay: $("#game-time-display"),
+            copyGameTimeBtn: $("#copy-game-time"),
+            profileSelect: $("#profile-select"),
+            profileNameInput: $("#profile-name-input"),
+            saveProfileBtn: $("#save-profile"),
+            loadProfileBtn: $("#load-profile"),
+            deleteProfileBtn: $("#delete-profile")
         };
 
         const previewElements = {
-            embed: $('#preview-embed'),
-            sidebar: $('.embed-sidebar'),
-            author: $('.embed-author'),
-            authorIcon: $('.embed-author-icon'),
-            authorName: $('.embed-author-name'),
-            title: $('.embed-title'),
-            description: $('.embed-description'),
-            fields: $('.embed-fields'),
-            thumbnail: $('.embed-thumbnail'),
-            thumbnailImg: $('.embed-thumbnail img'),
-            image: $('.embed-image'),
-            imageImg: $('.embed-image img'),
-            footer: $('.embed-footer'),
-            footerIcon: $('.embed-footer-icon'),
-            footerText: $('.embed-footer-text'),
-            footerSeparator: $('.embed-footer-separator'),
-            timestamp: $('.embed-timestamp')
+            embed: $("#preview-embed"),
+            sidebar: $(".embed-sidebar"),
+            author: $(".embed-author"),
+            authorIcon: $(".embed-author-icon"),
+            authorName: $(".embed-author-name"),
+            title: $(".embed-title"),
+            description: $(".embed-description"),
+            fields: $(".embed-fields"),
+            thumbnail: $(".embed-thumbnail"),
+            thumbnailImg: $(".embed-thumbnail img"),
+            image: $(".embed-image"),
+            imageImg: $(".embed-image img"),
+            footer: $(".embed-footer"),
+            footerIcon: $(".embed-footer-icon"),
+            footerText: $(".embed-footer-text"),
+            footerSeparator: $(".embed-footer-separator"),
+            timestamp: $(".embed-timestamp")
         };
 
         let fieldCounter = 0;
@@ -647,8 +622,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function escapeMarkdown(text) {
             // Basic escaping for Discord markdown to prevent accidental formatting
             return text
-                .replace(/\\/g, '\\\\') // Escape backslashes first
-                .replace(/([*_~`|>])/g, '\\$1'); // Escape Discord special characters
+                .replace(/\\/g, "\\\\") // Escape backslashes first
+                .replace(/([*_~`|>])/g, "\\$1"); // Escape Discord special characters
         }
 
         /**
@@ -724,7 +699,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     formElements.statusMessage.style.color = '';
                 } else {
                     formElements.unixTimestampDisplay.value = '';
-                    formElements.statusMessage.textContent = 'Fecha u hora inválida.';
+                    formElements.statusMessage.textContent = translate('msg_invalid_date_time');
                     formElements.statusMessage.style.color = '#f04747';
                 }
             } else {
@@ -744,7 +719,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 return ''; // Return empty if date is invalid
             }
             const realWorldUtcMinutes = realWorldUtcDate.getUTCHours() * 60 + realWorldUtcDate.getUTCMinutes();
-            // Ensure positive result for modulo by adding 1440 (minutes in a day)
+            // Ensure positive result for modulo by adding 1440 (minutes in a day) 
             const differenceInMinutes = (realWorldUtcMinutes - GAME_TIME_ANCHOR_UTC_MINUTES + 1440) % 1440; 
             const gameTimeMinutes = (differenceInMinutes * TIME_SCALE) % 1440;
 
@@ -791,26 +766,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!profileName) {
-                formElements.statusMessage.textContent = 'Por favor, introduce un nombre para el perfil.';
+                formElements.statusMessage.textContent = translate('msg_enter_profile_name');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
 
             const embedData = getEmbedData(false); // Get raw embed object
             if (Object.keys(embedData).length === 0) {
-                formElements.statusMessage.textContent = 'No hay datos de embed para guardar en el perfil.';
+                formElements.statusMessage.textContent = translate('msg_no_embed_data_to_save');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
 
             try {
                 localStorage.setItem(LOCAL_STORAGE_PREFIX + profileName, JSON.stringify(embedData));
-                formElements.statusMessage.textContent = `Perfil '${profileName}' guardado exitosamente.`;
+                formElements.statusMessage.textContent = translate('msg_profile_saved_success', { profileName: profileName });
                 formElements.statusMessage.style.color = '#43b581';
                 populateProfileSelect();
                 formElements.profileSelect.value = profileName; // Select the newly saved profile
             } catch (e) {
-                formElements.statusMessage.textContent = 'Error al guardar el perfil.';
+                formElements.statusMessage.textContent = translate('msg_error_saving_profile');
                 formElements.statusMessage.style.color = '#f04747';
                 console.error('Error saving profile:', e);
             }
@@ -819,7 +794,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function loadProfile() {
             const profileName = formElements.profileSelect.value;
             if (!profileName) {
-                formElements.statusMessage.textContent = 'Por favor, selecciona un perfil para cargar.';
+                formElements.statusMessage.textContent = translate('msg_select_profile_to_load');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
@@ -829,15 +804,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (storedData) {
                     const embed = JSON.parse(storedData);
                     loadEmbedData(embed);
-                    formElements.statusMessage.textContent = `Perfil '${profileName}' cargado exitosamente.`;
+                    formElements.statusMessage.textContent = translate('msg_profile_loaded_success', { profileName: profileName });
                     formElements.statusMessage.style.color = '#43b581';
                     formElements.profileNameInput.value = profileName;
                 } else {
-                    formElements.statusMessage.textContent = 'El perfil seleccionado no existe.';
+                    formElements.statusMessage.textContent = translate('msg_profile_not_exist');
                     formElements.statusMessage.style.color = '#f04747';
                 }
             } catch (e) {
-                formElements.statusMessage.textContent = 'Error al cargar el perfil.';
+                formElements.statusMessage.textContent = translate('msg_error_loading_profile');
                 formElements.statusMessage.style.color = '#f04747';
                 console.error('Error loading profile:', e);
             }
@@ -846,19 +821,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function deleteProfile() {
             const profileName = formElements.profileSelect.value;
             if (!profileName) {
-                formElements.statusMessage.textContent = 'Por favor, selecciona un perfil para eliminar.';
+                formElements.statusMessage.textContent = translate('msg_select_profile_to_delete');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
 
-            if (confirm(`¿Estás seguro de que quieres eliminar el perfil '${profileName}'?`)) {
+            if (confirm(translate('msg_confirm_delete_profile', { profileName: profileName }))) {
                 try {
                     localStorage.removeItem(LOCAL_STORAGE_PREFIX + profileName);
-                    formElements.statusMessage.textContent = `Perfil '${profileName}' eliminado exitosamente.`;
+                    formElements.statusMessage.textContent = translate('msg_profile_deleted_success', { profileName: profileName });
                     formElements.statusMessage.style.color = '#43b581';
                     populateProfileSelect();
                 } catch (e) {
-                    formElements.statusMessage.textContent = 'Error al eliminar el perfil.';
+                    formElements.statusMessage.textContent = translate('msg_error_deleting_profile');
                     formElements.statusMessage.style.color = '#f04747';
                     console.error('Error deleting profile:', e);
                 }
@@ -874,10 +849,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fieldDiv.dataset.fieldId = fieldId;
 
             fieldDiv.innerHTML = `
-                <input type="text" class="field-name" placeholder="Nombre del Campo" value="${escapeMarkdown(name)}">
-                <input type="text" class="field-value" placeholder="Valor del Campo" value="${escapeMarkdown(value)}">
+                <input type="text" class="field-name" data-i18n-placeholder="field_name_placeholder" value="${escapeMarkdown(name)}">
+                <input type="text" class="field-value" data-i18n-placeholder="field_value_placeholder" value="${escapeMarkdown(value)}">
                 <div class="field-inline-checkbox">
-                    <label>En línea <input type="checkbox" class="field-inline" ${inline ? 'checked' : ''}></label>
+                    <label><span data-i18n="inline_field_label"></span> <input type="checkbox" class="field-inline" ${inline ? 'checked' : ''}></label>
                     <button class="remove-field">&times;</button>
                 </div>
             `;
@@ -1059,214 +1034,214 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             const footerText = formElements.footerText.value.trim();
             const footerIconUrl = formElements.footerIconUrl.value.trim();
-                        const timestampChecked = formElements.timestamp.checked;
-                        if (footerText || footerIconUrl || timestampChecked) {
-                            embed.footer = {};
-                            if (footerText) embed.footer.text = footerText;
-                            if (isValidHttpUrl(footerIconUrl)) embed.footer.icon_url = footerIconUrl;
+            const timestampChecked = formElements.timestamp.checked;
+            if (footerText || footerIconUrl || timestampChecked) {
+                embed.footer = {};
+                if (footerText) embed.footer.text = footerText;
+                if (isValidHttpUrl(footerIconUrl)) embed.footer.icon_url = footerIconUrl;
+            }
+            if (timestampChecked && formElements.unixTimestampDisplay.value) {
+                 // Use the Unix timestamp from the input field
+                embed.timestamp = new Date(parseInt(formElements.unixTimestampDisplay.value) * 1000).toISOString();
+            } else if (timestampChecked) {
+                // Fallback to current time if checkbox is checked but no unix timestamp
+                embed.timestamp = new Date().toISOString();
+            }
+            
+            return forDiscordApi ? { embeds: [embed] } : embed;
+        }
+        
+        // --- Load Embed Data into Form ---
+        function loadEmbedData(embed) {
+            formElements.authorName.value = embed.author?.name || '';
+            formElements.authorUrl.value = embed.author?.url || '';
+            formElements.authorIconUrl.value = embed.author?.icon_url || '';
+            formElements.title.value = embed.title || '';
+            formElements.url.value = embed.url || '';
+            formElements.description.value = embed.description || '';
+            formElements.color.value = embed.color ? '#' + embed.color.toString(16).padStart(6, '0') : '#ffffff';
+
+            // Clear existing fields and add new ones
+            formElements.fieldsContainer.innerHTML = '';
+            embed.fields?.forEach(field => addField(field.name, field.value, field.inline));
+
+            formElements.thumbnailUrl.value = embed.thumbnail?.url || '';
+            formElements.imageUrl.value = embed.image?.url || '';
+            formElements.footerText.value = embed.footer?.text || '';
+            formElements.footerIconUrl.value = embed.footer?.icon_url || '';
+            
+            // Handle timestamp loading
+            if (embed.timestamp) {
+                formElements.timestamp.checked = true; // Check the display timestamp checkbox
+                const date = new Date(embed.timestamp);
+                // Format date to YYYY-MM-DD for input type="date"
+                formElements.unixDate.value = date.toISOString().split('T')[0];
+                // Format time to HH:MM:SS for input type="time"
+                formElements.unixTime.value = date.toISOString().split('T')[1].substring(0, 8);
+                updateUnixTimestamp(); // Update the displayed Unix timestamp
+            } else {
+                formElements.timestamp.checked = false;
+                formElements.unixDate.value = '';
+                formElements.unixTime.value = '';
+                formElements.unixTimestampDisplay.value = '';
+            }
+
+            updatePreview();
+        }
+
+        // --- Event Listeners ---
+        // Inputs for live preview
+        $$('.controls input, .controls textarea').forEach(input => {
+            if (input.id !== 'io-code') { // Exclude the code input itself
+                input.addEventListener('input', updatePreview);
+            }
+        });
+        formElements.timestamp.addEventListener('change', updatePreview);
+        formElements.addFieldBtn.addEventListener('click', () => addField());
+
+        formElements.loadFlyerDataBtn.addEventListener('click', () => {
+            const file = formElements.flyerUpload.files[0];
+            if (!file) {
+                formElements.statusMessage.textContent = translate('msg_select_png');
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            if (file.type !== 'image/png') {
+                formElements.statusMessage.textContent = translate('msg_not_png');
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const textChunks = readPngTextChunks(arrayBuffer);
+                    const eventDataChunk = textChunks.find(chunk => chunk.keyword === 'convoyrama-event-data');
+
+                    if (eventDataChunk) {
+                        const eventData = JSON.parse(eventDataChunk.text);
+                        // Convert eventData to a format suitable for loadEmbedData if necessary
+                        // For now, assume it directly maps or requires minimal transformation
+                        const embedFromFlyer = {
+                            author: { name: eventData.authorName || '' },
+                            title: eventData.eventName || '',
+                            description: eventData.description || '',
+                            color: eventData.color ? hexToDec(eventData.color) : undefined, // Convert hex to decimal
+                            image: { url: eventData.mapImageUrl || eventData.imageUrl || '' }, // Assuming mapImageUrl or imageUrl from flyer
+                            fields: eventData.fields || [],
+                            timestamp: eventData.timestamp || undefined, // Pass timestamp if available
+                            // Placeholder for other fields if needed from flyer data
+                        };
+
+                        // Populate the channel ID if present in the flyer data (less likely but possible)
+                        if (eventData.channelId) {
+                            formElements.channelId.value = eventData.channelId;
                         }
-                        if (timestampChecked && formElements.unixTimestampDisplay.value) {
-                             // Use the Unix timestamp from the input field
-                            embed.timestamp = new Date(parseInt(formElements.unixTimestampDisplay.value) * 1000).toISOString();
-                        } else if (timestampChecked) {
-                            // Fallback to current time if checkbox is checked but no unix timestamp
-                            embed.timestamp = new Date().toISOString();
-                        }
-            
-                        return forDiscordApi ? { embeds: [embed] } : embed;
-                    }
-            
-                    // --- Load Embed Data into Form ---
-                    function loadEmbedData(embed) {
-                        formElements.authorName.value = embed.author?.name || '';
-                        formElements.authorUrl.value = embed.author?.url || '';
-                        formElements.authorIconUrl.value = embed.author?.icon_url || '';
-                        formElements.title.value = embed.title || '';
-                        formElements.url.value = embed.url || '';
-                        formElements.description.value = embed.description || '';
-                        formElements.color.value = embed.color ? '#' + embed.color.toString(16).padStart(6, '0') : '#ffffff';
-            
-                        // Clear existing fields and add new ones
-                        formElements.fieldsContainer.innerHTML = '';
-                        embed.fields?.forEach(field => addField(field.name, field.value, field.inline));
-            
-                        formElements.thumbnailUrl.value = embed.thumbnail?.url || '';
-                        formElements.imageUrl.value = embed.image?.url || '';
-                        formElements.footerText.value = embed.footer?.text || '';
-                        formElements.footerIconUrl.value = embed.footer?.icon_url || '';
                         
-                        // Handle timestamp loading
-                        if (embed.timestamp) {
-                            formElements.timestamp.checked = true; // Check the display timestamp checkbox
-                            const date = new Date(embed.timestamp);
-                            // Format date to YYYY-MM-DD for input type="date"
-                            formElements.unixDate.value = date.toISOString().split('T')[0];
-                            // Format time to HH:MM:SS for input type="time"
-                            formElements.unixTime.value = date.toISOString().split('T')[1].substring(0, 8);
-                            updateUnixTimestamp(); // Update the displayed Unix timestamp
-                        } else {
-                            formElements.timestamp.checked = false;
-                            formElements.unixDate.value = '';
-                            formElements.unixTime.value = '';
-                            formElements.unixTimestampDisplay.value = '';
-                        }
-            
-                        updatePreview();
+                        loadEmbedData(embedFromFlyer);
+                        formElements.statusMessage.textContent = translate('msg_flyer_loaded_success');
+                        formElements.statusMessage.style.color = '#43b581';
+
+                    } else {
+                        formElements.statusMessage.textContent = translate('msg_no_event_data');
+                        formElements.statusMessage.style.color = '#f04747';
                     }
-            
-                    // --- Event Listeners ---
-                    // Inputs for live preview
-                    $$('.controls input, .controls textarea').forEach(input => {
-                        if (input.id !== 'io-code') { // Exclude the code input itself
-                            input.addEventListener('input', updatePreview);
-                        }
+                } catch (error) {
+                    formElements.statusMessage.textContent = translate('msg_error_processing_flyer') + error.message;
+                    formElements.statusMessage.style.color = '#f04747';
+                    console.error('Error processing flyer:', error);
+                }
+            };
+            reader.onerror = () => {
+                formElements.statusMessage.textContent = translate('msg_error_reading_file');
+                formElements.statusMessage.style.color = '#f04747';
+            };
+            reader.readAsArrayBuffer(file);
+        });
+        
+        // Event listeners for Unix timestamp calculation
+        formElements.unixDate.addEventListener('input', () => {
+            updateUnixTimestamp();
+            updateGameTime();
+        });
+        formElements.unixTime.addEventListener('input', () => {
+            updateUnixTimestamp();
+            updateGameTime();
+        });
+
+        formElements.copyUnixTimestampBtn.addEventListener('click', () => {
+            const timestamp = formElements.unixTimestampDisplay.value;
+            if (timestamp) {
+                navigator.clipboard.writeText(timestamp)
+                    .then(() => {
+                        formElements.statusMessage.textContent = translate('msg_timestamp_copied');
+                        formElements.statusMessage.style.color = '#43b581';
+                    })
+                    .catch(err => {
+                        formElements.statusMessage.textContent = translate('msg_error_copying_timestamp');
+                        formElements.statusMessage.style.color = '#f04747';
+                        console.error('Error copying timestamp:', err);
                     });
-                    formElements.timestamp.addEventListener('change', updatePreview);
-                    formElements.addFieldBtn.addEventListener('click', () => addField());
-            
-                    formElements.loadFlyerDataBtn.addEventListener('click', () => {
-                        const file = formElements.flyerUpload.files[0];
-                        if (!file) {
-                            formElements.statusMessage.textContent = 'Por favor, selecciona un archivo PNG.';
-                            formElements.statusMessage.style.color = '#f04747';
-                            return;
-                        }
-            
-                        if (file.type !== 'image/png') {
-                            formElements.statusMessage.textContent = 'El archivo seleccionado no es un PNG.';
-                            formElements.statusMessage.style.color = '#f04747';
-                            return;
-                        }
-            
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            try {
-                                const arrayBuffer = e.target.result;
-                                const textChunks = readPngTextChunks(arrayBuffer);
-                                const eventDataChunk = textChunks.find(chunk => chunk.keyword === 'convoyrama-event-data');
-            
-                                if (eventDataChunk) {
-                                    const eventData = JSON.parse(eventDataChunk.text);
-                                    // Convert eventData to a format suitable for loadEmbedData if necessary
-                                    // For now, assume it directly maps or requires minimal transformation
-                                    const embedFromFlyer = {
-                                        author: { name: eventData.authorName || '' },
-                                        title: eventData.eventName || '',
-                                        description: eventData.description || '',
-                                        color: eventData.color ? hexToDec(eventData.color) : undefined, // Convert hex to decimal
-                                        image: { url: eventData.mapImageUrl || eventData.imageUrl || '' }, // Assuming mapImageUrl or imageUrl from flyer
-                                        fields: eventData.fields || [],
-                                        timestamp: eventData.timestamp || undefined, // Pass timestamp if available
-                                        // Placeholder for other fields if needed from flyer data
-                                    };
-            
-                                    // Populate the channel ID if present in the flyer data (less likely but possible)
-                                    if (eventData.channelId) {
-                                        formElements.channelId.value = eventData.channelId;
-                                    }
-                                    
-                                    loadEmbedData(embedFromFlyer);
-                                    formElements.statusMessage.textContent = 'Datos del flyer cargados exitosamente.';
-                                    formElements.statusMessage.style.color = '#43b581';
-            
-                                } else {
-                                    formElements.statusMessage.textContent = 'No se encontraron datos de evento en el flyer.';
-                                    formElements.statusMessage.style.color = '#f04747';
-                                }
-                            } catch (error) {
-                                formElements.statusMessage.textContent = 'Error al procesar el flyer: ' + error.message;
-                                formElements.statusMessage.style.color = '#f04747';
-                                console.error('Error processing flyer:', error);
-                            }
-                        };
-                        reader.onerror = () => {
-                            formElements.statusMessage.textContent = 'Error al leer el archivo.';
-                            formElements.statusMessage.style.color = '#f04747';
-                        };
-                                                reader.readAsArrayBuffer(file);
-                                            });
-                                    
-                                            // Event listeners for Unix timestamp calculation
-                                            formElements.unixDate.addEventListener('input', () => {
-                                                updateUnixTimestamp();
-                                                updateGameTime();
-                                            });
-                                            formElements.unixTime.addEventListener('input', () => {
-                                                updateUnixTimestamp();
-                                                updateGameTime();
-                                            });
-                                    
-                                            formElements.copyUnixTimestampBtn.addEventListener('click', () => {
-                                                const timestamp = formElements.unixTimestampDisplay.value;
-                                                if (timestamp) {
-                                                    navigator.clipboard.writeText(timestamp)
-                                                        .then(() => {
-                                                            formElements.statusMessage.textContent = 'Timestamp copiado al portapapeles.';
-                                                            formElements.statusMessage.style.color = '#43b581';
-                                                        })
-                                                        .catch(err => {
-                                                            formElements.statusMessage.textContent = 'Error al copiar el timestamp.';
-                                                            formElements.statusMessage.style.color = '#f04747';
-                                                            console.error('Error copying timestamp:', err);
-                                                        });
-                                                } else {
-                                                    formElements.statusMessage.textContent = 'No hay timestamp para copiar.';
-                                                    formElements.statusMessage.style.color = '#f04747';
-                                                }
-                                            });
-                                    
-                                            formElements.copyGameTimeBtn.addEventListener('click', () => {
-                                                const gameTime = formElements.gameTimeDisplay.value;
-                                                if (gameTime) {
-                                                    navigator.clipboard.writeText(gameTime)
-                                                        .then(() => {
-                                                            formElements.statusMessage.textContent = 'Hora in-game copiada al portapapeles.';
-                                                            formElements.statusMessage.style.color = '#43b581';
-                                                        })
-                                                        .catch(err => {
-                                                            formElements.statusMessage.textContent = 'Error al copiar la hora in-game.';
-                                                            formElements.statusMessage.style.color = '#f04747';
-                                                            console.error('Error copying game time:', err);
-                                                        });
-                                                } else {
-                                                    formElements.statusMessage.textContent = 'No hay hora in-game para copiar.';
-                                                    formElements.statusMessage.style.color = '#f04747';
-                                                }
-                                            });
-                                    
-                                            // Event listeners for profile management
-                                            formElements.saveProfileBtn.addEventListener('click', saveProfile);
-                                            formElements.loadProfileBtn.addEventListener('click', loadProfile);
-                                            formElements.deleteProfileBtn.addEventListener('click', deleteProfile);
-                                    
-                                            formElements.profileSelect.addEventListener('change', () => {
-                                                if (formElements.profileSelect.value === '') {
-                                                    formElements.profileNameInput.value = ''; // Clear input for new profile
-                                                } else {
-                                                    formElements.profileNameInput.value = formElements.profileSelect.value; // Show selected profile name
-                                                }
-                                            });
-                                    
-                                    
-                                            // --- Code Generation/Loading (Task 5) ---
-                                            formElements.getCodeBtn.addEventListener('click', () => {
-                                                const embedData = getEmbedData(false); // Get raw embed object
-                                                if (Object.keys(embedData).length === 0) {
-                                                    formElements.statusMessage.textContent = 'No hay datos de embed para guardar.';
-                                                    formElements.statusMessage.style.color = '#f04747';
-                                                    return;
-                                                }
-                                                const jsonString = JSON.stringify(embedData);
-                                                formElements.ioCode.value = btoa(jsonString); // Base64 encode
-                                                formElements.statusMessage.textContent = 'Código generado, cópialo para guardar.';
-                                                formElements.statusMessage.style.color = '#43b581';
-                                                formElements.ioCode.select(); // Select the text for easy copying
-                                                document.execCommand('copy');
-                                            });
+            } else {
+                formElements.statusMessage.textContent = translate('msg_no_timestamp_to_copy');
+                formElements.statusMessage.style.color = '#f04747';
+            }
+        });
+
+        formElements.copyGameTimeBtn.addEventListener('click', () => {
+            const gameTime = formElements.gameTimeDisplay.value;
+            if (gameTime) {
+                navigator.clipboard.writeText(gameTime)
+                    .then(() => {
+                        formElements.statusMessage.textContent = translate('msg_game_time_copied');
+                        formElements.statusMessage.style.color = '#43b581';
+                    })
+                    .catch(err => {
+                        formElements.statusMessage.textContent = translate('msg_error_copying_game_time');
+                        formElements.statusMessage.style.color = '#f04747';
+                        console.error('Error copying game time:', err);
+                    });
+            } else {
+                formElements.statusMessage.textContent = translate('msg_no_game_time_to_copy');
+                formElements.statusMessage.style.color = '#f04747';
+            }
+        });
+
+        // Event listeners for profile management
+        formElements.saveProfileBtn.addEventListener('click', saveProfile);
+        formElements.loadProfileBtn.addEventListener('click', loadProfile);
+        formElements.deleteProfileBtn.addEventListener('click', deleteProfile);
+
+        formElements.profileSelect.addEventListener('change', () => {
+            if (formElements.profileSelect.value === '') {
+                formElements.profileNameInput.value = ''; // Clear input for new profile
+            } else {
+                formElements.profileNameInput.value = formElements.profileSelect.value; // Show selected profile name
+            }
+        });
+
+        
+        // --- Code Generation/Loading (Task 5) ---
+        formElements.getCodeBtn.addEventListener('click', () => {
+            const embedData = getEmbedData(false); // Get raw embed object
+            if (Object.keys(embedData).length === 0) {
+                formElements.statusMessage.textContent = translate('msg_no_embed_data_to_save_code');
+                formElements.statusMessage.style.color = '#f04747';
+                return;
+            }
+            const jsonString = JSON.stringify(embedData);
+            formElements.ioCode.value = btoa(jsonString); // Base64 encode
+            formElements.statusMessage.textContent = translate('msg_code_generated');
+            formElements.statusMessage.style.color = '#43b581';
+            formElements.ioCode.select(); // Select the text for easy copying
+            document.execCommand('copy');
+        });
         formElements.loadCodeBtn.addEventListener('click', () => {
             const encodedData = formElements.ioCode.value.trim();
             if (!encodedData) {
-                formElements.statusMessage.textContent = 'Pega un código en el campo de texto para cargar.';
+                formElements.statusMessage.textContent = translate('msg_paste_code_to_load');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
@@ -1274,10 +1249,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const jsonString = atob(encodedData); // Base64 decode
                 const embed = JSON.parse(jsonString);
                 loadEmbedData(embed);
-                formElements.statusMessage.textContent = 'Embed cargado exitosamente.';
+                formElements.statusMessage.textContent = translate('msg_embed_loaded_success');
                 formElements.statusMessage.style.color = '#43b581';
             } catch (e) {
-                formElements.statusMessage.textContent = 'Error al cargar el código. Asegúrate de que sea válido.';
+                formElements.statusMessage.textContent = translate('msg_error_loading_code');
                 formElements.statusMessage.style.color = '#f04747';
                 console.error("Error decoding or parsing embed data:", e);
             }
@@ -1287,7 +1262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         formElements.sendEmbedBtn.addEventListener('click', async () => {
             const channelId = formElements.channelId.value.trim();
             if (!channelId) {
-                formElements.statusMessage.textContent = 'Por favor, introduce la ID del canal.';
+                formElements.statusMessage.textContent = translate('msg_enter_channel_id');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
@@ -1295,16 +1270,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const embedData = getEmbedData(true); // Get embed data formatted for Discord API
 
             if (!embedData || !embedData.embeds || embedData.embeds.length === 0 || Object.keys(embedData.embeds[0]).length === 0) {
-                formElements.statusMessage.textContent = 'El embed está vacío. Agrega contenido para enviar.';
+                formElements.statusMessage.textContent = translate('msg_embed_is_empty');
                 formElements.statusMessage.style.color = '#f04747';
                 return;
             }
 
-            formElements.statusMessage.textContent = 'Enviando embed...';
+            formElements.statusMessage.textContent = translate('msg_sending_embed');
             formElements.statusMessage.style.color = '#fff';
 
             try {
-                const response = await fetch('embed_generator.php', {
+                const response = await fetch('send_embed.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1319,26 +1294,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const result = await response.json();
 
                 if (result.success) {
-                    formElements.statusMessage.textContent = result.message;
+                    formElements.statusMessage.textContent = translate('msg_embed_sent_success');
                     formElements.statusMessage.style.color = '#43b581';
                 } else {
-                    formElements.statusMessage.textContent = `Error: ${result.message}`;
+                    formElements.statusMessage.textContent = `${translate('msg_error_sending_embed')} ${result.message || ''}`;
                     formElements.statusMessage.style.color = '#f04747';
                     console.error('Discord API Error:', result);
                 }
             } catch (error) {
-                formElements.statusMessage.textContent = 'Error de conexión con el servidor.';
+                formElements.statusMessage.textContent = translate('msg_connection_error');
                 formElements.statusMessage.style.color = '#f04747';
                 console.error('Fetch Error:', error);
             }
         });
 
         // --- Initial setup ---
-        addField('Campo 1', 'Valor del campo 1'); // Add a default field
+        addField(translate('default_field_name'), translate('default_field_value')); // Add a default field
         populateProfileSelect(); // Populate profiles on load
         updateUnixTimestamp(); // Initial calculation for Unix timestamp
         updateGameTime(); // Initial calculation for game time
-        updatePreview();
+        
+        // Initial language load and apply translations
+        loadTranslations(currentLanguage).then(() => {
+            applyTranslations();
+            updatePreview(); // Ensure preview is updated after translations
+        });
 
     </script>
 </body>
