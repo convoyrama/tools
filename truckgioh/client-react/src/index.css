@@ -21,7 +21,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 
   /* Global background styles moved from App.css */
-  background-image: url('/assets/perfect-green-grass.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
