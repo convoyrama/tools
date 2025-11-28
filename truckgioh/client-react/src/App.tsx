@@ -80,6 +80,18 @@ function App() {
 
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('gameId');
+    const playerId = params.get('playerId');
+
+    if (!gameId || !playerId) {
+      setGameMessage("Error: Missing gameId or playerId in the URL. Please use the link provided by the bot.");
+      return;
+    }
+    
+    // Set query parameters before connecting
+    socket.io.opts.query = { gameId, playerId };
+
     // --- Event Handlers ---
     function onConnect() { setIsConnected(true); console.log('Connected!'); }
     function onDisconnect() { setIsConnected(false); console.log('Disconnected.'); }
@@ -210,6 +222,11 @@ function App() {
       setMyTurn(true); // Give the turn back to the player
     }
 
+    function onConnectionError(message: string) {
+        setGameMessage(`Connection Error: ${message}. The game cannot start.`);
+        setIsConnected(false);
+    }
+
     // --- Register Listeners ---
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -221,8 +238,11 @@ function App() {
     socket.on('start-replenishment', onStartReplenishment);
     socket.on('game-over', onGameOver);
     socket.on('invalid-action', onInvalidAction);
+    socket.on('connection-error', onConnectionError);
     socket.connect();
+
     return () => {
+      // --- Unregister Listeners ---
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('game-start', onGameStart);
@@ -233,6 +253,7 @@ function App() {
       socket.off('start-replenishment', onStartReplenishment);
       socket.off('game-over', onGameOver);
       socket.off('invalid-action', onInvalidAction);
+      socket.off('connection-error', onConnectionError);
       socket.disconnect();
     };
   }, []);
