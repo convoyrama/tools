@@ -44,7 +44,7 @@ const activeGames = new Map(); // gameId -> { gameState, playerSockets: { discor
 
 // The base URL for the client-side game. This should be configured for deployment.
 // For development, assumes client is on port 5173 (Vite default)
-const CLIENT_BASE_URL = process.env.CLIENT_BASE_URL || 'http://localhost:5173';
+const CLIENT_BASE_URL = process.env.CLIENT_BASE_URL || 'http://23.94.221.194:5173';
 
 // --- New HTTP endpoint for creating a game (called by the Discord bot) ---
 app.post('/api/create-game', (req, res) => {
