@@ -77,6 +77,7 @@ app.post('/api/create-game', (req, res) => {
     const challengedUrl = `${CLIENT_BASE_URL}/?gameId=${gameId}&playerId=${challengedId}`;
 
     res.status(200).json({ gameId, challengerUrl, challengedUrl });
+});
 
 
 // Original `resetGameState` and `waitingPlayers` are no longer global
