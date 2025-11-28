@@ -1,0 +1,97 @@
+.card {
+  width: 160px; /* A better size for display */
+  height: 230px; /* Maintains the ~377x543 aspect ratio */
+  border-radius: 12px; /* A bit more rounded */
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  margin: 10px;
+  cursor: pointer;
+  border: 4px solid transparent;
+  transition: all 0.2s ease-in-out;
+  position: relative; /* Crucial for positioning the text overlay */
+  background-color: #222; /* Fallback color if image is missing */
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.card.selected {
+  border-color: #FFD700; /* Gold color for selection */
+  box-shadow: 0 0 20px #FFD700;
+  transform: scale(1.05); /* Subtle zoom effect */
+}
+
+.card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the whole area without distortion */
+}
+
+.card-image-placeholder {
+  width: 100%;
+  height: 100%; /* The placeholder should also fill the whole card */
+  background-color: #555;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  text-align: center;
+  color: #ccc;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.card-image-placeholder.face-down {
+    background-color: #3a3f4a;
+    color: #999;
+}
+
+.card-info {
+  position: absolute; /* This is the magic: overlay the text on top of the image */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0) 100%);
+  color: white;
+  padding: 15px 10px 5px 10px; /* More padding at the top of the info box */
+  text-align: center;
+  font-size: 0.8em;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.card-name {
+  font-weight: bold;
+  font-size: 0.9em;
+  margin: 0 0 5px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-hp, .card-chassis-classes, .card-stats-placeholder, .card-rule-description {
+  font-size: 0.8em;
+  color: #ddd;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Border Colors */
+.card-border-default { border-color: transparent; }
+.card-border-light { border-color: transparent; }
+.card-border-medium { border-color: transparent; }
+.card-border-heavy { border-color: transparent; }
+.card-border-environment { border-color: transparent; }
+.card-border-trap { border-color: #8A2BE2; } /* BlueViolet for trap cards */
+
+/* Mixed classes for Chassis */
+.card-border-light-medium {
+  border-image: linear-gradient(to right, transparent 50%, transparent 50%) 1;
+}
+.card-border-medium-heavy {
+  border-image: linear-gradient(to right, transparent 50%, transparent 50%) 1;
+}

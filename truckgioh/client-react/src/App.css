@@ -1,0 +1,282 @@
+.App {
+  text-align: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 20px auto; /* Add margin to top and bottom */
+  /* Add a slight translucent background to make text readable over the grass */
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+h1, h2, h3 {
+  color: #61dafb;
+  margin-bottom: 10px;
+}
+
+p {
+  margin: 5px 0;
+}
+
+.game-message {
+  background-color: #ffc107;
+  color: #212529;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.game-status-bar {
+  display: flex;
+  justify-content: space-around;
+  background-color: rgba(58, 63, 74, 0.8); /* Slightly transparent */
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px; /* Reduced margin */
+}
+
+.card-hand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px; /* Reduced gap */
+  margin-bottom: 15px; /* Reduced margin */
+  min-height: 250px;
+  border: 1px dashed #555;
+  padding: 8px; /* Reduced padding */
+  border-radius: 5px;
+  background-color: rgba(47, 51, 58, 0.8);
+}
+
+/* Remove game-board-section as it's replaced by .battle-layout */
+/* .game-board-section {
+  border: 2px solid #555;
+  border-radius: 10px;
+  padding: 20px;
+  background-color: transparent;
+} */
+
+.active-cards-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* Reduced gap */
+  margin-bottom: 15px; /* Reduced margin */
+}
+
+.lineup-area {
+  margin-bottom: 15px; /* Reduced margin */
+}
+
+.lineup-area.opponent {
+  margin-bottom: 20px; /* Reduced margin */
+}
+
+.truck-lineup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px; /* Reduced gap */
+  min-height: 250px;
+  border: 1px solid #444;
+  padding: 10px; /* Reduced padding */
+  border-radius: 8px;
+  background-color: rgba(47, 51, 58, 0.8);
+}
+
+.lineup-area.player .truck-lineup {
+  margin-top: 10px; /* Reduced margin */
+}
+
+button {
+  background-color: #61dafb;
+  border: none;
+  color: #282c34;
+  padding: 8px 15px; /* Reduced padding */
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 15px; /* Reduced font size */
+  margin: 8px 2px; /* Reduced margin */
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover:not(:disabled) {
+  background-color: #007bff;
+}
+
+button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.destruction-message-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 20px 40px;
+  border-radius: 10px;
+  font-size: 2em;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1000;
+  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+  animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.battle-layout {
+  display: flex;
+  flex-direction: column; /* Stack lineups vertically by default */
+  align-items: center; /* Center horizontally */
+  gap: 15px; /* Reduced gap between sections */
+  margin-top: 20px;
+}
+
+@media (min-width: 768px) { /* On larger screens, arrange horizontally */
+  .battle-layout {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start; /* Align lineups to top of their content */
+  }
+}
+
+.middle-battle-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* Gap between environment card and attack button */
+  min-width: 180px; /* Ensure environment card has space */
+}
+
+.player-fuel-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 128, 0, 0.3); /* Semi-transparent green */
+  border: 2px dashed green;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: greenyellow;
+  text-shadow: 1px 1px 2px black;
+  transition: all 0.2s ease-in-out;
+}
+
+.player-fuel-target.selected {
+  background-color: rgba(0, 128, 0, 0.6);
+  border-color: yellow;
+  color: yellow;
+  box-shadow: 0 0 15px yellow;
+  transform: scale(1.05); /* Zoom effect for selection */
+}
+
+.player-fuel-target:hover {
+
+    transform: scale(1.02);
+
+}
+
+
+
+@keyframes fuel-blink {
+
+  50% {
+
+    color: red;
+
+    font-weight: bold;
+
+    transform: scale(1.1);
+
+  }
+
+}
+
+
+
+.fuel-blinking {
+
+  animation: fuel-blink 0.5s 2; /* Blink twice for a total of 1 second */
+
+}
+
+/* Card attack status indicators */
+.card-can-attack {
+  box-shadow: 0 0 15px 5px rgba(0, 150, 255, 0.7) !important;
+  cursor: pointer;
+}
+
+.card-has-attacked {
+  box-shadow: 0 0 15px 5px rgba(40, 40, 40, 0.8) !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Card Zoom Modal */
+.card-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.card-zoom-overlay .card {
+  transform: scale(2.5);
+}
+
+/* Endgame Message Overlay */
+.endgame-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000; /* Ensure it's on top of everything */
+}
+
+.endgame-message {
+  background-color: #28a745; /* Green for win, can be dynamic later */
+  color: white;
+  padding: 40px 60px;
+  border-radius: 15px;
+  font-size: 3.5em; /* Large font size */
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); /* Stronger glow */
+  animation: pulse 1.5s infinite alternate; /* Subtle animation */
+}
+
+.endgame-message.lose {
+  background-color: #dc3545; /* Red for loss */
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}

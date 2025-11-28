@@ -1,0 +1,19 @@
+{
+  "name": "truckgioh-game",
+  "version": "1.0.0",
+  "description": "Fullstack Truckgioh Card Game (LAG'S SPEED VTC)",
+  "main": "index.js",
+  "scripts": {
+    "dev-server": "npm start --prefix ./server",
+    "dev-client": "npm run dev --prefix ./client-react",
+    "dev": "concurrently \"npm run dev-server\" \"npm run dev-client\"",
+    "server": "npm start --prefix ./server",
+    "client": "npm run dev --prefix ./client-react"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
