@@ -327,11 +327,12 @@ io.on('connection', (socket) => {
         socket.emit('connection-error', 'Not authorized for this game.');
         return socket.disconnect();
     }
-    if (discordPlayers[discordId].socketId) {
-        console.log(`Socket ${socket.id} disconnected: Discord ID ${discordId} already connected to game ${gameId}.`);
-        socket.emit('connection-error', 'Player already connected.');
-        return socket.disconnect();
-    }
+    // Temporarily disable check to allow multiple connections from same Discord ID for testing
+    // if (game.discordPlayers[discordId].socketId) {
+    //     console.log(`Socket ${socket.id} disconnected: Discord ID ${discordId} already connected to game ${gameId}.`);
+    //     socket.emit('connection-error', 'Player already connected.');
+    //     return socket.disconnect();
+    // }
 
     // Assign socket to Discord player
     discordPlayers[discordId].socketId = socket.id;
