@@ -12,19 +12,10 @@ app.use(express.json()); // To parse JSON bodies from incoming requests
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        'http://23.94.221.194:5173',
-        // Add other origins if needed, e.g., your production domain
-      ];
-      // Allow requests with no origin (like mobile apps or curl requests)
-      // or from localhost/127.0.0.1 on any port during development
-      if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
+    origin: [
+      "http://23.94.221.194:5173", 
+      "http://localhost:5173"
+    ],
     methods: ["GET", "POST"]
   }
 });
