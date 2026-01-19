@@ -104,10 +104,18 @@ app.post('/api/create-race', (req, res) => {
         return res.status(503).json({ error: 'Server full' });
     }
 
-    const { challengerId, challengedId, channelId } = req.body;
+    let { challengerId, challengedId, channelId } = req.body;
     
     if (!challengerId || !challengedId) {
         return res.status(400).json({ error: 'Missing player IDs' });
+    }
+
+    // HANDLER AUTO-DESAFÍO (Testing)
+    // Si el usuario se reta a sí mismo, alteramos el ID del "P2" para que no colisione en el objeto.
+    let realChallengedId = challengedId;
+    if (challengerId === challengedId) {
+        realChallengedId = challengedId + '_clone';
+        console.log('Self-challenge detected. Cloning ID for P2.');
     }
 
     const gameId = crypto.randomUUID();
@@ -119,7 +127,7 @@ app.post('/api/create-race', (req, res) => {
         status: 'active',
         players: {
             [challengerId]: { id: challengerId, username: 'Player 1', finished: false, time: null, speed: 0 },
-            [challengedId]: { id: challengedId, username: 'Player 2', finished: false, time: null, speed: 0 }
+            [realChallengedId]: { id: realChallengedId, username: 'Player 2 (Clone)', finished: false, time: null, speed: 0 }
         },
         createdAt: Date.now(),
         // 2. Set Auto-Expiration Timer
@@ -131,7 +139,8 @@ app.post('/api/create-race', (req, res) => {
     const clientBaseUrl = process.env.CLIENT_URL || 'http://23.94.221.241:5200';
     
     const challengerUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengerId}`;
-    const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengedId}`;
+    // Usamos el ID "falso" para el enlace del P2
+    const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${realChallengedId}`;
 
     console.log(`Race created: ${gameId} (${currentGames + 1}/${MAX_CONCURRENT_GAMES} active)`);
 
