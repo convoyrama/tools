@@ -125,7 +125,7 @@ app.post('/api/create-race', (req, res) => {
         }, GAME_TIMEOUT_MS)
     };
 
-    const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:5200';
+    const clientBaseUrl = process.env.CLIENT_URL || 'http://23.94.221.241:5200';
     
     const challengerUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengerId}`;
     const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengedId}`;
