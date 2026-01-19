@@ -44,6 +44,17 @@
     border-color: #00ccff;
 }
 
+.status-light.blue-blinking {
+    background: #0088ff;
+    border-color: #00ccff;
+    animation: blinkBlue 0.3s infinite alternate;
+}
+
+@keyframes blinkBlue {
+    0% { opacity: 0.2; box-shadow: 0 0 0 transparent; }
+    100% { opacity: 1; box-shadow: 0 0 15px #0088ff, inset 0 0 5px white; }
+}
+
 .light-label {
     font-size: 0.5rem;
     color: #666;

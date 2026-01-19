@@ -580,7 +580,10 @@ function App() {
 
                             {/* NEW: Damage Light (Blue) */}
                             <div className="status-light-container">
-                                <div className={`status-light ${ (temp > 105 || rpm > 2300) ? 'blue-active' : '' }`}></div>
+                                <div className={`status-light ${ 
+                                    (temp > 108 || rpm > 2350) ? 'blue-active' : 
+                                    (temp > 98 || rpm > 2100) ? 'blue-blinking' : '' 
+                                }`}></div>
                                 <span className="light-label">Check</span>
                             </div>
                         </div>
