@@ -483,20 +483,6 @@ function App() {
             </div>
 
             <div className="hud">
-                {/* DEBUG PANEL (Temporary) */}
-                <div style={{
-                    position: 'absolute', top: '-100px', left: '10px', 
-                    background: 'rgba(0,0,0,0.8)', color: '#0f0', 
-                    padding: '5px', fontSize: '0.8rem', fontFamily: 'monospace',
-                    pointerEvents: 'none', zIndex: 100
-                }}>
-                    RPM: {rpm} <br/>
-                    Gear: {gear} <br/>
-                    Spd: {speed} <br/>
-                    Temp: {temp.toFixed(1)} <br/>
-                    Turbo: {turbo.toFixed(2)}
-                </div>
-
                 <div className="hud-top-row">
                     {/* LEFT: RPM Gauge + Indicators */}
                     <div className="gauge-group-left">
