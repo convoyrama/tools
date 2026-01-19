@@ -51,8 +51,15 @@ const resolveGame = async (gameId, reason) => {
     // Caso 1: Ambos terminaron (VS normal)
     if (p1.finished && p2.finished) {
         type = 'vs';
-        if (p1.time < p2.time) { winner = p1; loser = p2; }
-        else { winner = p2; loser = p1; }
+        if (p1.time < p2.time) { 
+            winner = p1; loser = p2; 
+        } else if (p2.time < p1.time) { 
+            winner = p2; loser = p1; 
+        } else {
+            // Empate exacto en tiempo: Desempate por Velocidad
+            if (p1.speed > p2.speed) { winner = p1; loser = p2; }
+            else { winner = p2; loser = p1; }
+        }
     }
     // Caso 2: Solo P1 terminó (P2 abandonó)
     else if (p1.finished && !p2.finished) {

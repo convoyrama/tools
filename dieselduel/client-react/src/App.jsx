@@ -185,16 +185,16 @@ function App() {
           // 1. Base acceleration dependent on gear
           let gearFactor = (14 - p.gear) * 0.1; 
           if (p.gear >= 10) gearFactor *= 0.6; 
-          if (p.gear >= 12) gearFactor *= 0.5; 
+          if (p.gear >= 12) gearFactor *= 0.7; // Was 0.5, giving more top-end push
 
           // 2. RPM Curve Factor
           let torqueCurve = 1.0;
           if (p.rpm < 800) {
               // Turbo Lag (Safe calc)
               torqueCurve = 0.4 + (Math.max(0, p.rpm - 200) / 600) * 0.6; 
-          } else if (p.rpm > 1900) {
-              // Torque Drop-off
-              torqueCurve = Math.max(0.1, 1.0 - ((p.rpm - 1900) / 600)); 
+          } else if (p.rpm > 2100) { // Extended Power Band (Was 1900)
+              // Torque Drop-off starts later
+              torqueCurve = Math.max(0.1, 1.0 - ((p.rpm - 2100) / 400)); 
           }
           
           // 3. Friction/Load Factor
