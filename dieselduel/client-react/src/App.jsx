@@ -302,8 +302,9 @@ function App() {
 
       // 5. Finish Line
       if (p.distance >= PHYSICS.GAME_DISTANCE) {
-          setFinalTime(now - p.startTime);
-          endGame('finished');
+          const finishTime = now - p.startTime;
+          setFinalTime(finishTime);
+          endGame('finished', finishTime);
           return;
       }
 
@@ -348,7 +349,7 @@ function App() {
       }
   };
 
-  const endGame = (reason) => {
+  const endGame = (reason, timeArg = 0) => {
       if (reason === 'finished') {
           try { 
               // KILL ENGINE SOUND
@@ -373,7 +374,7 @@ function App() {
           socket.emit('finish_race', { 
               gameId: gId, 
               playerId: playerId, // Use state
-              time: finalTime,
+              time: timeArg, // Use the argument passed directly
               speed: finalSpd 
           });
           setGameState('finished');
