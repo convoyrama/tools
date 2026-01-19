@@ -220,7 +220,7 @@ function App() {
           if (p.gear > 8 && p.rpm < 1200) totalTorque *= 0.05;
           if (p.gear > 10 && p.rpm < 1300) totalTorque = 0;
 
-          const gainRate = 1000 * gearFactor * Math.max(0.0, totalTorque); 
+          const gainRate = 950 * gearFactor * Math.max(0.0, totalTorque); 
           rpmChange = gainRate * deltaTime;
       }
       p.rpm = Math.min(PHYSICS.MAX_RPM, Math.max(PHYSICS.IDLE_RPM, p.rpm + rpmChange));
