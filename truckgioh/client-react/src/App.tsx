@@ -8,7 +8,7 @@ import Card from './components/Card'; // Import the Card component
 interface TruckCardData { name: string; compatible_engine_classes: string[]; compatible_chassis_classes: string[]; }
 interface EngineCardData { name: string; hp: number; class: string; }
 interface ChassisCardData { name: string; classes: string[]; fuel_capacity?: number; }
-interface PlayerHand { models: TruckCardData[]; engines: EngineCardData[]; chassis: ChassisCardData[]; trap_cards: TrapCardData[]; }
+interface PlayerHand { engines: EngineCardData[]; chassis: ChassisCardData[]; trap_cards: TrapCardData[]; }
 interface TrapCardData { name: string; description: string; effects: any[]; }
 
 // Item that can be deployed onto the field - Moved from Hand.tsx
@@ -67,16 +67,21 @@ function App() {
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [zoomedCard, setZoomedCard] = useState<any | null>(null); // State for zoomed card
   // States for card selection from hand
-  const [selectedHandModel, setSelectedHandModel] = useState<TruckCardData | null>(null);
   const [selectedHandEngine, setSelectedHandEngine] = useState<EngineCardData | null>(null);
   const [selectedHandChassis, setSelectedHandChassis] = useState<ChassisCardData | null>(null);
   const [selectedHandTrapCard, setSelectedHandTrapCard] = useState<TrapCardData | null>(null);
+  const [isWaiting, setIsWaiting] = useState<boolean>(false); // New state to track waiting status
 
   // Refs to hold the latest state for use in socket event handlers, avoiding stale closures
   const myFinalLineupRef = useRef(myFinalLineup);
   myFinalLineupRef.current = myFinalLineup;
   const opponentFinalLineupRef = useRef(opponentFinalLineup);
   opponentFinalLineupRef.current = opponentFinalLineup;
+
+  const canAttack = useMemo(() => {
+    // A player can attack if they have at least one truck that hasn't attacked and isn't immobilized.
+    return myFinalLineup.some(item => item.type === 'truck' && !item.has_attacked_this_round && !item.immobilized);
+  }, [myFinalLineup]);
 
 
   useEffect(() => {
@@ -107,15 +112,20 @@ function App() {
       setGameMessage(`Game started! Assemble your convoy.`);
       setMyFinalLineup([]); // Clear lineup on game start
       setOpponentFinalLineup([]); // Clear lineup on game start
+      setIsWaiting(false); // Reset waiting
     }
 
     function onBattleStart(data: any) {
-      console.log('EVENT: battle-start', data);
+      console.log(`[${socket.id}] EVENT: battle-start`, data);
+      const isMyTurn = data.turn === socket.id;
+      console.log(`[${socket.id}] It is my turn: ${isMyTurn}`);
+
       setGameState(prev => ({ ...(prev!), status: 'battle', active_environment: data.environment }));
       setMyFinalLineup(data.my_final_lineup);
       setOpponentFinalLineup(data.opponent_final_lineup);
-      setMyTurn(data.turn === socket.id);
-      setGameMessage(`Battle started! It's ${data.turn === socket.id ? 'your' : 'opponent\'s'} turn.`);
+      setMyTurn(isMyTurn);
+      setGameMessage(`Battle started! It's ${isMyTurn ? 'your' : 'opponent\'s'} turn.`);
+      setIsWaiting(false); // Ensure waiting is off when battle starts
     }
     
     function onCardRevealed({ truckId, truckData }: { truckId: string, truckData: FinalLineupItem }) { // truckData is now FinalLineupItem
@@ -126,10 +136,13 @@ function App() {
     }
 
     function onNextTurn(data: any) {
-      console.log('EVENT: next-turn', data);
-      setMyTurn(data.next_turn === socket.id);
+      console.log(`[${socket.id}] EVENT: next-turn`, data);
+      const isMyTurn = data.next_turn === socket.id;
+      console.log(`[${socket.id}] It is my turn: ${isMyTurn}`);
+
+      setMyTurn(isMyTurn);
       setGameState(prev => ({...(prev!), current_round: data.round}));
-      setGameMessage(`Round ${data.round}. It's ${data.next_turn === socket.id ? 'your' : 'opponent\'s'} turn.`);
+      setGameMessage(`Round ${data.round}. It's ${isMyTurn ? 'your' : 'opponent\'s'} turn.`);
       setSelectedAttackerId(null);
       setSelectedTargetId(null);
 
@@ -143,52 +156,37 @@ function App() {
 
     function onTurnResult(data: any) {
       console.log('EVENT: turn-result', data);
+      // Always update fuel first
       setPlayerFuel(data.updated_fuel[socket.id as string]);
       const opponentId = Object.keys(data.updated_fuel).find(id => id !== socket.id);
       if (opponentId) setOpponentFuel(data.updated_fuel[opponentId]);
 
-      // NEW: Update myFinalLineup if updated_my_lineup is provided by the server
+      // Always accept the server's state of the lineups as the source of truth
       if (data.updated_my_lineup) {
         setMyFinalLineup(data.updated_my_lineup);
       }
+      if (data.updated_opponent_lineup) {
+        setOpponentFinalLineup(data.updated_opponent_lineup);
+      }
 
-      if (data.direct_damage_to_player) {
+      // Then, set the message based on the event type
+      if (data.tie) {
+          setBlinkingPlayer('both');
+          setDestructionMessage(`¡Choque de camiones! Ambos vehículos son destruidos y ambos jugadores pierden ${data.damage_dealt} de combustible.`);
+      } else if (data.direct_damage_to_player) {
           const targetPlayer = data.direct_damage_to_player === socket.id ? "self" : "opponent";
           setBlinkingPlayer(targetPlayer);
-          setDestructionMessage(`Direct hit! ${targetPlayer === 'self' ? 'Your' : "Opponent's"} Fuel takes ${data.damage_dealt} damage!`);
+          setDestructionMessage(`¡Golpe directo! El combustible ${targetPlayer === 'self' ? 'tuyo' : "del oponente"} recibe ${data.damage_dealt} de daño.`);
       } else if (data.loser_truck_id) {
-        let destroyedItemName = "an item";
-        let message = "";
-
-        // Use the refs to get the latest state inside this closure
-        const myDestroyedItem = myFinalLineupRef.current.find(t => t.id === data.loser_truck_id);
-        if (myDestroyedItem) {
-            setBlinkingPlayer('self'); // My fuel should blink
-            if (myDestroyedItem.type === 'truck') {
-                destroyedItemName = myDestroyedItem.model.name;
-                message = `Your ${destroyedItemName} was destroyed! You lose ${data.damage_dealt} Fuel.`;
-            } else if (myDestroyedItem.type === 'trap_card') {
-                destroyedItemName = myDestroyedItem.name;
-                message = `Your trap card "${destroyedItemName}" was destroyed! You lose ${data.damage_dealt} Fuel.`;
-            }
-            setMyFinalLineup(prev => prev.filter(t => t.id !== data.loser_truck_id));
-        } else {
-            const opponentDestroyedItem = opponentFinalLineupRef.current.find(t => t.id === data.loser_truck_id);
-            if (opponentDestroyedItem) {
-                setBlinkingPlayer('opponent'); // Opponent's fuel should blink
-                 if (opponentDestroyedItem.type === 'truck' && opponentDestroyedItem.revealed) {
-                    destroyedItemName = (opponentDestroyedItem as any).model.name; // Cast because type guard is tricky
-                    message = `Opponent's ${destroyedItemName} was destroyed! They lose ${data.damage_dealt} Fuel.`;
-                } else if (opponentDestroyedItem.type === 'trap_card' && opponentDestroyedItem.revealed) {
-                    destroyedItemName = opponentDestroyedItem.name;
-                    message = `Opponent's trap card "${destroyedItemName}" was destroyed! They lose ${data.damage_dealt} Fuel.`;
-                } else {
-                    message = `An opponent's hidden item was destroyed! They lose ${data.damage_dealt} Fuel.`;
-                }
-                setOpponentFinalLineup(prev => prev.filter(t => t.id !== data.loser_truck_id));
-            }
-        }
-        setDestructionMessage(message || "An item was destroyed!");
+          // Find out who lost for the message
+          const myDestroyedItem = myFinalLineupRef.current.find(t => t.id === data.loser_truck_id);
+          if (myDestroyedItem) { // My truck was in the original lineup, but is now gone from the new one
+              setBlinkingPlayer('self');
+              setDestructionMessage(`¡Tu camión fue destruido! Pierdes ${data.damage_dealt} de combustible.`);
+          } else {
+              setBlinkingPlayer('opponent');
+              setDestructionMessage(`¡El camión del oponente fue destruido! Él pierde ${data.damage_dealt} de combustible.`);
+          }
       }
     }
     
@@ -199,16 +197,14 @@ function App() {
         setGameClientHand(data.new_hand);
         setOpponentFinalLineup([]); // Clear opponent's board for the new round
         setGameMessage(`End of round. Replenish your lineup for round ${data.round}.`);
+        setIsWaiting(false); // Reset waiting for next round setup
     }
 
     function onGameOver(data: any) {
       const prefix = data.winner ? "You Won!" : "You Lost!";
       let messageSuffix = data.message; // Default to server message
 
-      if (!data.winner && messageSuffix.includes("Opponent's Fuel")) {
-        // If player lost and server message implies opponent's fuel, override it.
-        messageSuffix = "Your Fuel reached zero.";
-      }
+      // Removed client-side override for loss message. Server's message is now authoritative.
 
       setEndgameMessage(`${prefix} ${messageSuffix}`);
       setPlayerWon(data.winner);
@@ -227,6 +223,15 @@ function App() {
         setIsConnected(false);
     }
 
+    function onFuelUpdated(data: any) {
+      console.log('EVENT: fuel-updated', data);
+      setPlayerFuel(data[socket.id as string]);
+      const opponentId = Object.keys(data).find(id => id !== socket.id);
+      if (opponentId) {
+        setOpponentFuel(data[opponentId]);
+      }
+    }
+
     // --- Register Listeners ---
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
@@ -235,6 +240,7 @@ function App() {
     socket.on('card-revealed', onCardRevealed);
     socket.on('next-turn', onNextTurn);
     socket.on('turn-result', onTurnResult);
+    socket.on('fuel-updated', onFuelUpdated); // Register new listener
     socket.on('start-replenishment', onStartReplenishment);
     socket.on('game-over', onGameOver);
     socket.on('invalid-action', onInvalidAction);
@@ -250,6 +256,7 @@ function App() {
       socket.off('card-revealed', onCardRevealed);
       socket.off('next-turn', onNextTurn);
       socket.off('turn-result', onTurnResult);
+      socket.off('fuel-updated', onFuelUpdated); // Unregister new listener
       socket.off('start-replenishment', onStartReplenishment);
       socket.off('game-over', onGameOver);
       socket.off('invalid-action', onInvalidAction);
@@ -281,10 +288,15 @@ function App() {
   // --- Player Actions ---
   const handleAttack = () => {
     if (!myTurn || !selectedAttackerId) return;
+
+    // Optimistic UI update to immediately remove glow
+    setMyFinalLineup(prev => prev.map(t => 
+        t.id === selectedAttackerId ? { ...t, has_attacked_this_round: true } : t
+    ));
+
     let targetIdToSend = selectedTargetId;
-    if (selectedTargetId === "opponent_player_fuel") {
-      targetIdToSend = null;
-    }
+    // Removed logic that converted "opponent_player_fuel" to null.
+    // The server explicitly checks for the string "opponent_player_fuel".
     socket.emit('attack', { attacker_truck_id: selectedAttackerId, target_truck_id: targetIdToSend });
     setMyTurn(false);
     setGameMessage('Attacking...');
@@ -292,37 +304,42 @@ function App() {
     setSelectedTargetId(null);
   };
 
+  const handlePassTurn = () => {
+    if (!myTurn) return;
+    socket.emit('pass-turn');
+    setMyTurn(false);
+    setGameMessage('Passing turn...');
+  };
+
 
 
   const onLineupReady = (lineup: DeployableItem[]) => {
       socket.emit('player-ready-with-lineup', lineup);
       setGameMessage('Lineup submitted! Waiting for opponent...');
-      setGameClientHand(null);
-      setSelectedHandModel(null);
+      // Do NOT clear hand here, as we need it for playing trap cards in battle
+      // setGameClientHand(null); 
       setSelectedHandEngine(null);
       setSelectedHandChassis(null);
       setSelectedHandTrapCard(null);
+      setIsWaiting(true); // Enable waiting mode to hide setup UI
   };
 
   const handleHandCardSelected = useCallback((card: any, type: string) => {
     if (type === 'clear') {
-        setSelectedHandModel(null);
         setSelectedHandEngine(null);
         setSelectedHandChassis(null);
         setSelectedHandTrapCard(null);
         return;
     }
     if (type === 'trap_cards') {
-        setSelectedHandModel(null);
         setSelectedHandEngine(null);
         setSelectedHandChassis(null);
         setSelectedHandTrapCard(selectedHandTrapCard === card ? null : card); // Toggle selection
+        setSelectedAttackerId(null); // Clear attacker selection if selecting a trap card
+        setSelectedTargetId(null); // Clear target when switching context
     } else {
         setSelectedHandTrapCard(null);
         switch (type) {
-            case 'models':
-                setSelectedHandModel(selectedHandModel === card ? null : card); // Toggle selection
-                break;
             case 'engines':
                 setSelectedHandEngine(selectedHandEngine === card ? null : card); // Toggle selection
                 break;
@@ -331,7 +348,7 @@ function App() {
                 break;
         }
     }
-  }, [setSelectedHandModel, setSelectedHandEngine, setSelectedHandChassis, setSelectedHandTrapCard, selectedHandModel, selectedHandEngine, selectedHandChassis, selectedHandTrapCard]);
+  }, [setSelectedHandEngine, setSelectedHandChassis, setSelectedHandTrapCard, selectedHandEngine, selectedHandChassis, selectedHandTrapCard]);
 
   const handlePlayTrapCard = () => {
     if (!myTurn || !selectedHandTrapCard) return;
@@ -391,13 +408,17 @@ function App() {
         </div>
       )}
 
-      {gameClientHand && (
+      {gameClientHand && !isWaiting && (
         <Hand
             hand={gameClientHand}
+            playerFuel={playerFuel}
+            opponentFuel={opponentFuel}
+            myTurn={myTurn} // Pass myTurn prop
+            phase={gameState?.status || 'setup'} // Pass phase prop
+
             onLineupReady={onLineupReady}
 
             maxDeployableItems={(gameState?.current_round ?? 1) > 1 ? 4 : 3}
-            selectedModel={selectedHandModel}
             selectedEngine={selectedHandEngine}
             selectedChassis={selectedHandChassis}
             selectedTrapCard={selectedHandTrapCard}
@@ -418,15 +439,20 @@ function App() {
                   type={item.type === 'truck' ? 'models' : 'trap_cards'}
                   currentHP={item.type === 'truck' ? item.final_hp : undefined}
                   className={
-                    item.type === 'truck' && myTurn
-                      ? item.has_attacked_this_round || item.immobilized
-                        ? 'card-has-attacked'
-                        : 'card-can-attack'
+                    myTurn && !item.has_attacked_this_round && !item.immobilized
+                      ? 'card-can-attack' // Glows if it can act (Truck or Trap)
                       : ''
                   }
                   onClick={() => {
-                    if (myTurn && item.type === 'truck' && !item.has_attacked_this_round && !item.immobilized) {
+                    // Allow selecting Trucks OR Trap Cards as attackers
+                    if (myTurn && !item.has_attacked_this_round && !item.immobilized) {
                       setSelectedAttackerId(item.id);
+                    } else if (item.type === 'truck') {
+                      // Allow inspecting trucks that cannot attack
+                      setZoomedCard(item.model); 
+                    } else if (item.type === 'trap_card') {
+                      // Allow inspecting used/immobilized trap cards
+                      setZoomedCard(item.card);
                     }
                   }}
                   isSelected={selectedAttackerId === item.id}
@@ -450,15 +476,22 @@ function App() {
 
             {myTurn && selectedHandTrapCard && (
                 <div className="trap-card-actions">
-                    <button onClick={handlePlayTrapCard} disabled={!myTurn || !selectedHandTrapCard}>
-                        Play {selectedHandTrapCard.name}
+                    <p>Select a target for {selectedHandTrapCard.name}</p>
+                    <button onClick={handlePlayTrapCard} disabled={!myTurn || !selectedHandTrapCard || (!selectedTargetId && selectedHandTrapCard.name !== "Police")}> 
+                        {/* Police might not need a target if it affects 'attacking truck' automatically, 
+                            but for active play, we usually target something or just play it. 
+                            Let's allow playing if target is selected OR if it doesn't strictly need one 
+                            (though for now we enforce target to be safe unless refined).
+                        */}
+                        Play Card
                     </button>
+                    <button onClick={() => handleHandCardSelected(null, 'clear')}>Cancel</button>
                 </div>
             )}
 
             <div className="player-actions">
-              {myTurn && selectedAttackerId && selectedTargetId && ( <button onClick={handleAttack}>ATTACK!</button> )}
-
+              {myTurn && canAttack && selectedAttackerId && selectedTargetId && ( <button onClick={handleAttack}>ATTACK!</button> )}
+              {myTurn && !canAttack && <button onClick={handlePassTurn}>Pass Turn</button>}
             </div>
           </div>
           
@@ -466,9 +499,18 @@ function App() {
             <h3>Opponent's Lineup</h3>
             <div
               className="truck-lineup"
-              onClick={() => myTurn && opponentFinalLineup.length === 0 && setSelectedTargetId("opponent_player_fuel")}
+              onClick={() => {
+                  if (myTurn) {
+                       const hasOpponentTrucks = opponentFinalLineup.some(i => i.type === 'truck');
+                       // Allow selecting fuel as target if NO trucks exist OR if we are using a Trap Card (which might target fuel)
+                       if (!hasOpponentTrucks || selectedHandTrapCard) {
+                           setSelectedTargetId("opponent_player_fuel");
+                       }
+                  }
+              }}
             >
-              {opponentFinalLineup.length === 0 && (
+              {/* Show Fuel Target if no trucks OR if playing a trap card */}
+              {(!opponentFinalLineup.some(i => i.type === 'truck') || selectedHandTrapCard) && (
                 <div className={`player-fuel-target ${selectedTargetId === "opponent_player_fuel" ? "selected" : ""}`}>
                   <span>Target Opponent's Fuel</span>
                 </div>
@@ -482,13 +524,7 @@ function App() {
                   isFaceDown={!item.revealed}
                   onClick={() => myTurn && setSelectedTargetId(item.id)}
                   isSelected={selectedTargetId === item.id}
-                  className={
-                    item.type === 'truck' && !myTurn // If it's a truck AND it's OPPONENT'S turn
-                      ? item.has_attacked_this_round || item.immobilized
-                        ? 'card-has-attacked' // Apply dark glow if used/immobilized
-                        : 'card-can-attack'   // Apply blue glow if unused and can attack
-                      : '' // No class if not a truck or not opponent's turn
-                  }
+                  // Removed className logic for opponent's cards - they should never glow for the current player
                 />
               ))}
             </div>

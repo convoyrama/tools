@@ -3,8 +3,8 @@
   padding: 20px;
   max-width: 1200px;
   margin: 20px auto; /* Add margin to top and bottom */
-  /* Add a slight translucent background to make text readable over the grass */
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  background-color: rgba(20, 20, 20, 0.9); /* VTC Black */
+  color: rgb(240, 240, 240); /* VTC White */
   border-radius: 10px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
@@ -19,8 +19,8 @@ p {
 }
 
 .game-message {
-  background-color: #ffc107;
-  color: #212529;
+  background-color: rgb(90, 165, 25); /* VTC Green */
+  color: rgb(240, 240, 240); /* VTC White */
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 20px;
@@ -73,15 +73,17 @@ p {
 }
 
 .truck-lineup {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px; /* Reduced gap */
-  min-height: 250px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two equal-width columns */
+  grid-template-rows: repeat(2, 1fr);    /* Two equal-height rows */
+  gap: 10px;
+  min-height: 480px; /* Slightly increased for better card fit */
+  min-width: 350px;  /* Slightly increased for better card fit */
   border: 1px solid #444;
-  padding: 10px; /* Reduced padding */
+  padding: 10px;
   border-radius: 8px;
   background-color: rgba(47, 51, 58, 0.8);
+  place-items: center; /* Center cards within the grid cells */
 }
 
 .lineup-area.player .truck-lineup {
@@ -117,15 +119,15 @@ button:disabled {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(255, 0, 0, 0.8);
-  color: white;
+  background-color: rgba(90, 165, 25, 0.9); /* VTC Green */
+  color: rgb(240, 240, 240); /* VTC White */
   padding: 20px 40px;
   border-radius: 10px;
   font-size: 2em;
   font-weight: bold;
   text-align: center;
   z-index: 1000;
-  box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+  box-shadow: 0 0 20px rgba(90, 165, 25, 0.6);
   animation: fadeOut 3s forwards;
 }
 
@@ -215,15 +217,9 @@ button:disabled {
 }
 
 /* Card attack status indicators */
-.card-can-attack {
-  box-shadow: 0 0 15px 5px rgba(0, 150, 255, 0.7) !important;
+.card.card-can-attack {
+  box-shadow: 0 0 15px 5px rgba(0, 150, 255, 0.7);
   cursor: pointer;
-}
-
-.card-has-attacked {
-  box-shadow: 0 0 15px 5px rgba(40, 40, 40, 0.8) !important;
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 
 /* Card Zoom Modal */
@@ -260,20 +256,20 @@ button:disabled {
 }
 
 .endgame-message {
-  background-color: #28a745; /* Green for win, can be dynamic later */
-  color: white;
+  background-color: rgb(90, 165, 25); /* VTC Green */
+  color: rgb(240, 240, 240); /* VTC White */
   padding: 40px 60px;
   border-radius: 15px;
   font-size: 3.5em; /* Large font size */
   font-weight: bold;
   text-align: center;
-  box-shadow: 0 0 30px rgba(0, 255, 0, 0.8); /* Stronger glow */
+  box-shadow: 0 0 30px rgba(90, 165, 25, 0.8); /* VTC Green Glow */
   animation: pulse 1.5s infinite alternate; /* Subtle animation */
 }
 
 .endgame-message.lose {
-  background-color: #dc3545; /* Red for loss */
-  box-shadow: 0 0 30px rgba(255, 0, 0, 0.8);
+  background-color: rgb(20, 20, 20); /* VTC Black */
+  box-shadow: 0 0 30px rgba(150, 150, 150, 0.6); /* Neutral Glow */
 }
 
 @keyframes pulse {

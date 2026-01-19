@@ -73,6 +73,13 @@
   text-overflow: ellipsis;
 }
 
+.card-model-bonus {
+  font-size: 0.75em;
+  font-weight: bold;
+  color: rgb(240, 240, 240); /* VTC White */
+  margin: 2px 0 0 0;
+}
+
 .card-hp, .card-chassis-classes, .card-stats-placeholder, .card-rule-description {
   font-size: 0.8em;
   color: #ddd;

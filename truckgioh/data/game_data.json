@@ -1,591 +1,64 @@
 {
-  "models": [
-    {
-      "name": "Light",
-      "compatible_engine_classes": [
-        "Light", "Medium"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium"
-      ]
-    },
-    {
-      "name": "Light",
-      "compatible_engine_classes": [
-        "Light", "Medium"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium"
-      ]
-    },
-    {
-      "name": "Light",
-      "compatible_engine_classes": [
-        "Light", "Medium"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium"
-      ]
-    },
-    {
-      "name": "Light",
-      "compatible_engine_classes": [
-        "Light", "Medium"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium"
-      ]
-    },
-    {
-      "name": "Light",
-      "compatible_engine_classes": [
-        "Light", "Medium"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium"
-      ]
-    },
-    {
-      "name": "Medium",
-      "compatible_engine_classes": [
-        "Light", "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Medium",
-      "compatible_engine_classes": [
-        "Light", "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Medium",
-      "compatible_engine_classes": [
-        "Light", "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Medium",
-      "compatible_engine_classes": [
-        "Light", "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Medium",
-      "compatible_engine_classes": [
-        "Light", "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Light", "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Heavy",
-      "compatible_engine_classes": [
-        "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Heavy",
-      "compatible_engine_classes": [
-        "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Heavy",
-      "compatible_engine_classes": [
-        "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Heavy",
-      "compatible_engine_classes": [
-        "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Medium", "Heavy"
-      ]
-    },
-    {
-      "name": "Heavy",
-      "compatible_engine_classes": [
-        "Medium", "Heavy"
-      ],
-      "compatible_chassis_classes": [
-        "Medium", "Heavy"
-      ]
-    }
-  ],
   "engines": [
-    {
-      "name": "350HP",
-      "hp": 350,
-      "class": "Light"
-    },
-    {
-      "name": "350HP",
-      "hp": 350,
-      "class": "Light"
-    },
-    {
-      "name": "350HP",
-      "hp": 350,
-      "class": "Light"
-    },
-    {
-      "name": "480HP",
-      "hp": 480,
-      "class": "Light"
-    },
-    {
-      "name": "480HP",
-      "hp": 480,
-      "class": "Light"
-    },
-    {
-      "name": "480HP",
-      "hp": 480,
-      "class": "Light"
-    },
-    {
-      "name": "520HP",
-      "hp": 520,
-      "class": "Medium"
-    },
-    {
-      "name": "520HP",
-      "hp": 520,
-      "class": "Medium"
-    },
-    {
-      "name": "520HP",
-      "class": "Medium"
-    },
-    {
-      "name": "600HP",
-      "hp": 600,
-      "class": "Medium"
-    },
-    {
-      "name": "600HP",
-      "hp": 600,
-      "class": "Medium"
-    },
-    {
-      "name": "600HP",
-      "class": "Medium"
-    },
-    {
-      "name": "680HP",
-      "hp": 680,
-      "class": "Heavy"
-    },
-    {
-      "name": "680HP",
-      "class": "Heavy"
-    },
-    {
-      "name": "680HP",
-      "hp": 680,
-      "class": "Heavy"
-    },
-    {
-      "name": "750HP",
-      "hp": 750,
-      "class": "Heavy"
-    },
-    {
-      "name": "750HP",
-      "hp": 750,
-      "class": "Heavy"
-    },
-    {
-      "name": "750HP",
-      "hp": 750,
-      "class": "Heavy"
-    }
+    {"name": "605HP", "hp": 605, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -185},
+    {"name": "605HP", "hp": 605, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -185},
+    {"name": "605HP", "hp": 605, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -185},
+    {"name": "525HP", "hp": 525, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -155},
+    {"name": "525HP", "hp": 525, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -155},
+    {"name": "525HP", "hp": 525, "class": "Heavy", "imageClass": "Heavy", "fuel_modifier": -155},
+    {"name": "475HP", "hp": 475, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -105},
+    {"name": "475HP", "hp": 475, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -105},
+    {"name": "475HP", "hp": 475, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -105},
+    {"name": "475HP", "hp": 475, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -105},
+    {"name": "425HP", "hp": 425, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -85},
+    {"name": "425HP", "hp": 425, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -85},
+    {"name": "425HP", "hp": 425, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -85},
+    {"name": "425HP", "hp": 425, "class": "Medium", "imageClass": "Medium", "fuel_modifier": -85},
+    {"name": "370HP", "hp": 370, "class": "Light", "imageClass": "Light", "fuel_modifier": -25},
+    {"name": "370HP", "hp": 370, "class": "Light", "imageClass": "Light", "fuel_modifier": -25},
+    {"name": "370HP", "hp": 370, "class": "Light", "imageClass": "Light", "fuel_modifier": -25},
+    {"name": "370HP", "hp": 370, "class": "Light", "imageClass": "Light", "fuel_modifier": -25},
+    {"name": "350HP", "hp": 350, "class": "Light", "imageClass": "Light", "fuel_modifier": -5},
+    {"name": "350HP", "hp": 350, "class": "Light", "imageClass": "Light", "fuel_modifier": -5},
+    {"name": "350HP", "hp": 350, "class": "Light", "imageClass": "Light", "fuel_modifier": -5},
+    {"name": "350HP", "hp": 350, "class": "Light", "imageClass": "Light", "fuel_modifier": -5}
   ],
   "chassis": [
-    {
-      "name": "4x2",
-      "classes": [
-        "Light"
-      ],
-      "fuel_capacity": 650
-    },
-    {
-      "name": "4x2",
-      "classes": [
-        "Light"
-      ],
-      "fuel_capacity": 650
-    },
-    {
-      "name": "4x2",
-      "classes": [
-        "Light"
-      ],
-      "fuel_capacity": 650
-    },
-    {
-      "name": "4x2",
-      "classes": [
-        "Light"
-      ],
-      "fuel_capacity": 650
-    },
-    {
-      "name": "6x4/2",
-      "classes": [
-        "Light",
-        "Medium"
-      ],
-      "fuel_capacity": 500
-    },
-    {
-      "name": "6x4/2",
-      "classes": [
-        "Light",
-        "Medium"
-      ],
-      "fuel_capacity": 500
-    },
-    {
-      "name": "6x4/2",
-      "classes": [
-        "Light",
-        "Medium"
-      ],
-      "fuel_capacity": 500
-    },
-    {
-      "name": "6x4/2",
-      "classes": [
-        "Light",
-        "Medium"
-      ],
-      "fuel_capacity": 500
-    },
-    {
-      "name": "6x4",
-      "classes": [
-        "Medium",
-        "Heavy"
-      ],
-      "fuel_capacity": 450
-    },
-    {
-      "name": "6x4",
-      "classes": [
-        "Medium",
-        "Heavy"
-      ],
-      "fuel_capacity": 450
-    },
-    {
-      "name": "6x4",
-      "classes": [
-        "Medium",
-        "Heavy"
-      ],
-      "fuel_capacity": 450
-    },
-    {
-      "name": "6x4",
-      "classes": [
-        "Medium",
-        "Heavy"
-      ],
-      "fuel_capacity": 450
-    },
-    {
-      "name": "8x4",
-      "classes": [
-        "Heavy"
-      ],
-      "fuel_capacity": 300
-    },
-    {
-      "name": "8x4",
-      "classes": [
-        "Heavy"
-      ],
-      "fuel_capacity": 300
-    },
-    {
-      "name": "8x4",
-      "classes": [
-        "Heavy"
-      ],
-      "fuel_capacity": 300
-    },
-    {
-      "name": "8x4",
-      "classes": [
-        "Heavy"
-      ],
-      "fuel_capacity": 300
-    }
+    {"name": "4x2", "classes": ["Light", "Medium"], "fuel_capacity": 650},
+    {"name": "4x2", "classes": ["Light", "Medium"], "fuel_capacity": 650},
+    {"name": "4x2", "classes": ["Light", "Medium"], "fuel_capacity": 650},
+    {"name": "4x2", "classes": ["Light", "Medium"], "fuel_capacity": 650},
+    {"name": "4x2", "classes": ["Light", "Medium"], "fuel_capacity": 650},
+    {"name": "6x4/2", "classes": ["Light", "Medium"], "fuel_capacity": 500},
+    {"name": "6x4/2", "classes": ["Light", "Medium"], "fuel_capacity": 500},
+    {"name": "6x4/2", "classes": ["Light", "Medium"], "fuel_capacity": 500},
+    {"name": "6x4/2", "classes": ["Light", "Medium"], "fuel_capacity": 500},
+    {"name": "6x4/2", "classes": ["Light", "Medium"], "fuel_capacity": 500},
+    {"name": "6x4", "classes": ["Medium", "Heavy"], "fuel_capacity": 450},
+    {"name": "6x4", "classes": ["Medium", "Heavy"], "fuel_capacity": 450},
+    {"name": "6x4", "classes": ["Medium", "Heavy"], "fuel_capacity": 450},
+    {"name": "6x4", "classes": ["Medium", "Heavy"], "fuel_capacity": 450},
+    {"name": "6x4", "classes": ["Medium", "Heavy"], "fuel_capacity": 450},
+    {"name": "8x4", "classes": ["Heavy"], "fuel_capacity": 300},
+    {"name": "8x4", "classes": ["Heavy"], "fuel_capacity": 300},
+    {"name": "8x4", "classes": ["Heavy"], "fuel_capacity": 300},
+    {"name": "8x4", "classes": ["Heavy"], "fuel_capacity": 300},
+    {"name": "8x4", "classes": ["Heavy"], "fuel_capacity": 300}
   ],
   "environments": [
-    {
-      "name": "Sunny City",
-      "rule_description": "Ideal for agile vehicles. Bonus for Light Chassis and Engines. Severe penalty for Heavy Chassis.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": 100
-        },
-        {
-          "target": "engine_class",
-          "class": "Light",
-          "modifier": 75
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": -200
-        }
-      ]
-    },
-    {
-      "name": "Rainy City",
-      "rule_description": "Traffic and puddles are a problem. Penalty for Light Chassis, slight bonus for Medium Chassis.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": -75
-        },
-        {
-          "target": "chassis_class",
-          "class": "Medium",
-          "modifier": 25
-        }
-      ]
-    },
-    {
-      "name": "Snowy City",
-      "rule_description": "Narrow streets are a frozen nightmare. Big bonus for Light Chassis. Catastrophic penalty for Heavy Chassis.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": 150
-        },
-        {
-          "target": "chassis_class",
-          "class": "Medium",
-          "modifier": 50
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": -250
-        }
-      ]
-    },
-    {
-      "name": "Sunny Dirt Road",
-      "rule_description": "Uneven terrain not suitable for city vehicles. Penalty for Light Chassis and Engines.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": -150
-        },
-        {
-          "target": "engine_class",
-          "class": "Light",
-          "modifier": -75
-        }
-      ]
-    },
-    {
-      "name": "Rainy Dirt Road",
-      "rule_description": "Mud is a big problem for light vehicles, but heavy vehicles have an advantage. Severe penalty for Light Chassis, bonus for Heavy Chassis.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": -200
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": 75
-        }
-      ]
-    },
-    {
-      "name": "Snowy Dirt Road",
-      "rule_description": "Difficult terrain for extremes. Medium vehicles have an advantage. Penalty for Light and Heavy Chassis, bonus for Medium.",
-      "rules": [
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": -150
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": -100
-        },
-        {
-          "target": "chassis_class",
-          "class": "Medium",
-          "modifier": 50
-        }
-      ]
-    },
-    {
-      "name": "Sunny Highway",
-      "rule_description": "Perfect conditions for speed. Big bonus for Heavy Engines, slight bonus for Medium, penalty for Light.",
-      "rules": [
-        {
-          "target": "engine_class",
-          "class": "Heavy",
-          "modifier": 125
-        },
-        {
-          "target": "engine_class",
-          "class": "Medium",
-          "modifier": 50
-        },
-        {
-          "target": "engine_class",
-          "class": "Light",
-          "modifier": -75
-        }
-      ]
-    },
-    {
-      "name": "Rainy Highway",
-      "rule_description": "Heavy vehicles dominate wet asphalt. Cumulative bonuses for Heavy Engines and Chassis. Penalties for Light.",
-      "rules": [
-        {
-          "target": "engine_class",
-          "class": "Heavy",
-          "modifier": 125
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": 75
-        },
-        {
-          "target": "engine_class",
-          "class": "Light",
-          "modifier": -75
-        },
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": -75
-        }
-      ]
-    },
-    {
-      "name": "Snowy Highway",
-      "rule_description": "Complex conditions. Powerful engine helps, but heavy chassis is a risk. Light and Heavy receive bonuses and penalties that net out.",
-      "rules": [
-        {
-          "target": "engine_class",
-          "class": "Heavy",
-          "modifier": 125
-        },
-        {
-          "target": "chassis_class",
-          "class": "Heavy",
-          "modifier": -100
-        },
-        {
-          "target": "engine_class",
-          "class": "Light",
-          "modifier": -75
-        },
-        {
-          "target": "chassis_class",
-          "class": "Light",
-          "modifier": 100
-        },
-        {
-          "target": "engine_class",
-          "class": "Medium",
-          "modifier": 50
-        }
-      ]
-    }
+    {"name": "Sunny Dirt Road", "rule_description": "Combination of Dirt Road and Dry bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":25},{"target":"chassis_name","name":"6x4/2","modifier":75},{"target":"chassis_name","name":"6x4","modifier":125},{"target":"chassis_name","name":"8x4","modifier":175},{"target":"engine_name","name":"605HP","modifier":-50},{"target":"engine_name","name":"525HP","modifier":-25},{"target":"engine_name","name":"425HP","modifier":-25},{"target":"engine_name","name":"370HP","modifier":0},{"target":"engine_name","name":"350HP","modifier":0}]},
+    {"name": "Rainy Dirt Road", "rule_description": "Combination of Dirt Road and Rain bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":-100},{"target":"chassis_name","name":"6x4/2","modifier":50},{"target":"chassis_name","name":"6x4","modifier":100},{"target":"chassis_name","name":"8x4","modifier":150},{"target":"engine_name","name":"605HP","modifier":-100},{"target":"engine_name","name":"525HP","modifier":-50},{"target":"engine_name","name":"425HP","modifier":-50},{"target":"engine_name","name":"370HP","modifier":-100},{"target":"engine_name","name":"350HP","modifier":-150}]},
+    {"name": "Snowy Dirt Road", "rule_description": "Combination of Dirt Road and Snow bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":0},{"target":"chassis_name","name":"6x4/2","modifier":50},{"target":"chassis_name","name":"6x4","modifier":75},{"target":"chassis_name","name":"8x4","modifier":125},{"target":"engine_name","name":"605HP","modifier":-125},{"target":"engine_name","name":"525HP","modifier":-75},{"target":"engine_name","name":"425HP","modifier":-50},{"target":"engine_name","name":"370HP","modifier":-25},{"target":"engine_name","name":"350HP","modifier":-25}]},
+    {"name": "Sunny Highway", "rule_description": "Combination of Highway and Dry bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":125},{"target":"chassis_name","name":"6x4/2","modifier":50},{"target":"chassis_name","name":"6x4","modifier":75},{"target":"chassis_name","name":"8x4","modifier":100},{"target":"engine_name","name":"370HP","modifier":-25},{"target":"engine_name","name":"350HP","modifier":-50}]},
+    {"name": "Rainy Highway", "rule_description": "Combination of Highway and Rain bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":0},{"target":"chassis_name","name":"6x4/2","modifier":25},{"target":"chassis_name","name":"6x4","modifier":50},{"target":"chassis_name","name":"8x4","modifier":75},{"target":"engine_name","name":"605HP","modifier":-50},{"target":"engine_name","name":"525HP","modifier":-25},{"target":"engine_name","name":"425HP","modifier":-25},{"target":"engine_name","name":"370HP","modifier":-75},{"target":"engine_name","name":"350HP","modifier":-125}]},
+    {"name": "Snowy Highway", "rule_description": "Combination of Highway and Snow bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":100},{"target":"chassis_name","name":"6x4/2","modifier":25},{"target":"chassis_name","name":"6x4","modifier":25},{"target":"chassis_name","name":"8x4","modifier":50},{"target":"engine_name","name":"605HP","modifier":-75},{"target":"engine_name","name":"525HP","modifier":-50},{"target":"engine_name","name":"425HP","modifier":-25},{"target":"engine_name","name":"370HP","modifier":0},{"target":"engine_name","name":"350HP","modifier":0}]},
+    {"name": "Sunny City", "rule_description": "Combination of City and Dry bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":150},{"target":"chassis_name","name":"6x4/2","modifier":75},{"target":"chassis_name","name":"6x4","modifier":50},{"target":"chassis_name","name":"8x4","modifier":50},{"target":"engine_name","name":"605HP","modifier":-75},{"target":"engine_name","name":"525HP","modifier":-50},{"target":"engine_name","name":"370HP","modifier":100},{"target":"engine_name","name":"350HP","modifier":125}]},
+    {"name": "Rainy City", "rule_description": "Combination of City and Rain bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":25},{"target":"chassis_name","name":"6x4/2","modifier":50},{"target":"chassis_name","name":"6x4","modifier":25},{"target":"chassis_name","name":"8x4","modifier":25},{"target":"engine_name","name":"605HP","modifier":-125},{"target":"engine_name","name":"525HP","modifier":-75},{"target":"engine_name","name":"425HP","modifier":-25},{"target":"engine_name","name":"370HP","modifier":0},{"target":"engine_name","name":"350HP","modifier":0}]},
+    {"name": "Snowy City", "rule_description": "Combination of City and Snow bonuses", "rules": [{"target":"chassis_name","name":"4x2","modifier":125},{"target":"chassis_name","name":"6x4/2","modifier":50},{"target":"chassis_name","name":"6x4","modifier":0},{"target":"chassis_name","name":"8x4","modifier":0},{"target":"engine_name","name":"605HP","modifier":-150},{"target":"engine_name","name":"525HP","modifier":-100},{"target":"engine_name","name":"425HP","modifier":-25},{"target":"engine_name","name":"370HP","modifier":75},{"target":"engine_name","name":"350HP","modifier":125}]}
   ],
   "trap_cards": [
-    {
-      "name": "Fuel Thief",
-      "description": "Steals Fuel from opponent. Amount depends on target's class. Reveals one of your deployed trucks.",
-      "effects": [
-        {
-          "type": "steal_fuel",
-          "target": "opponent_truck",
-          "amounts": [
-            { "class": "Heavy", "value": 200 },
-            { "class": "Medium", "value": 150 },
-            { "class": "Light", "value": 100 }
-          ]
-        },
-        {
-          "type": "reveal_own_truck",
-          "target": "self_deployed_truck_random"
-        }
-      ]
-    },
-    {
-      "name": "Breakdown",
-      "description": "Immobilizes an opponent's truck for next turn, and it cannot be attacked. Costs 100 of your Fuel.",
-      "effects": [
-        {
-          "type": "immobilize_truck",
-          "target": "opponent_truck"
-        },
-        {
-          "type": "lose_fuel",
-          "target": "self",
-          "value": 100
-        }
-      ]
-    },
-    {
-      "name": "Police",
-      "description": "Destroys any attacking truck if it's hidden. Reveals all your deployed trucks.",
-      "effects": [
-        {
-          "type": "destroy_truck",
-          "target": "opponent_truck_hidden"
-        },
-        {
-          "type": "reveal_all_self",
-          "target": "all_trucks"
-        }
-      ]
-    }
+    { "name": "Fuel Thief", "description": "Steals Fuel from opponent. Amount depends on target's class. Reveals one of your deployed trucks.", "effects": [{"type": "steal_fuel", "target": "opponent_truck", "amounts": [{"class": "Heavy", "value": 200}, {"class": "Medium", "value": 150}, {"class": "Light", "value": 100}]}, {"type": "reveal_own_truck", "target": "self_deployed_truck_random"}] },
+    { "name": "Breakdown", "description": "Immobilizes an opponent's truck for next turn, and it cannot be attacked. Costs 100 of your Fuel.", "effects": [{"type": "immobilize_truck", "target": "opponent_truck"}, {"type": "lose_fuel", "target": "self", "value": 100}] },
+    { "name": "Police", "description": "Destroys any attacking truck if it's hidden. Reveals all your deployed trucks.", "effects": [{"type": "destroy_truck", "target": "opponent_truck_hidden"}, {"type": "reveal_all_self", "target": "all_trucks"}] }
   ]
 }

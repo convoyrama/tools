@@ -16,10 +16,12 @@ function App() {
   const [gear, setGear] = useState(0); 
   const [speed, setSpeed] = useState(0); 
   const [distance, setDistance] = useState(0);
-  const [redlineWarning, setRedlineWarning] = useState(false);
+  const [uiEffect, setUiEffect] = useState(''); // '', 'vibrating', or 'shaking'
   const [opponentTime, setOpponentTime] = useState(null);
   const [finalTime, setFinalTime] = useState(0);
   const [driverFace, setDriverFace] = useState('(o_o)');
+  const [temp, setTemp] = useState(85); // Engine Temp
+  const [turbo, setTurbo] = useState(0); // Turbo Pressure (0.0 - 1.0)
 
   // --- Music State ---
   const audioRef = useRef(null);
@@ -30,16 +32,25 @@ function App() {
     gear: 0,
     speed: 0,
     distance: 0,
-    engineHealth: 100, // Reverted to generic health if needed, or just unused
+    temp: 85, 
+    turbo: 0, // New Turbo State
     isShifting: false,
     startTime: 0,
     lastFrameTime: 0
   });
 
+  const [playerId, setPlayerId] = useState(null);
+
   // --- Socket & Init ---
   useEffect(() => {
+    // Parse URL params for gameId and playerId
+    const params = new URLSearchParams(window.location.search);
+    const gId = params.get('gameId') || 'room1'; // Fallback for dev
+    const pId = params.get('playerId') || 'guest'; // Fallback for dev
+    setPlayerId(pId);
+
     socket.on('connect', () => console.log('Connected to server'));
-    socket.emit('join_game', { gameId: 'room1', username: 'Player1' });
+    socket.emit('join_game', { gameId: gId, playerId: pId, username: 'Racer' });
     socket.on('opponent_finished', (data) => setOpponentTime(data.time));
 
     // Prepare music but don't play yet
@@ -115,7 +126,8 @@ function App() {
           gear: 1,   // Auto-engage 1st
           speed: 0,
           distance: 0,
-          engineHealth: 100,
+          temp: 80, // Starts at Operating Base (80C)
+          turbo: 0, // Turbo starts empty
           isShifting: false,
           startTime: Date.now(),
           lastFrameTime: Date.now()
@@ -167,68 +179,120 @@ function App() {
       if (p.isShifting) {
           rpmChange = -1500 * deltaTime; 
       } else {
-          // --- REALISTIC DIESEL TORQUE CURVE ---
-          // 1. Base acceleration dependent on gear (lower gears = faster)
-          let gearFactor = (14 - p.gear) * 0.1; 
+          // --- REALISTIC DIESEL TORQUE CURVE (ROBUST) ---
           
-          // Severe penalty for overdrive gears (10, 11, 12) due to air resistance
+          // 1. Base acceleration dependent on gear
+          let gearFactor = (14 - p.gear) * 0.1; 
           if (p.gear >= 10) gearFactor *= 0.6; 
           if (p.gear >= 12) gearFactor *= 0.5; 
 
-          // 2. RPM Curve Factor (Universal Non-Linearity)
+          // 2. RPM Curve Factor
           let torqueCurve = 1.0;
-          
-          // Friction/Load Factor: 200rpm base. Harder to spin as it goes up.
-          const frictionLoss = 1.0 - ((p.rpm - 200) / 3300);
-          
-          // Specific Diesel Power Band adjustments
           if (p.rpm < 800) {
-              // Turbo Lag (Severe below 800)
-              torqueCurve = 0.4 + ((p.rpm - 200) / 600) * 0.6; 
+              // Turbo Lag (Safe calc)
+              torqueCurve = 0.4 + (Math.max(0, p.rpm - 200) / 600) * 0.6; 
           } else if (p.rpm > 1900) {
               // Torque Drop-off
-              torqueCurve = 1.0 - ((p.rpm - 1900) / 600); 
+              torqueCurve = Math.max(0.1, 1.0 - ((p.rpm - 1900) / 600)); 
           }
           
-          // Combine factors
-          const totalTorque = torqueCurve * frictionLoss;
+          // 3. Friction/Load Factor
+          const frictionLoss = Math.max(0.1, 1.0 - (Math.max(0, p.rpm - 200) / 3300));
           
-          const gainRate = 1000 * gearFactor * Math.max(0.1, totalTorque); 
+          let totalTorque = torqueCurve * frictionLoss;
+
+          // --- TURBO LOGIC ---
+          const targetTurbo = p.rpm > 1200 ? Math.min(1.0, (p.rpm - 1200) / 1000) : 0;
+          
+          if (p.turbo < targetTurbo) {
+              p.turbo += 0.8 * deltaTime;
+          } else {
+              p.turbo -= 2.0 * deltaTime;
+          }
+          p.turbo = Math.min(1.0, Math.max(0, p.turbo));
+
+          // Apply Turbo Boost (Safe)
+          totalTorque *= (1.0 + (p.turbo * 0.25));
+          
+          // --- STALL PENALTY ---
+          if (p.gear > 4 && p.rpm < 1000) totalTorque *= 0.2;
+          if (p.gear > 8 && p.rpm < 1200) totalTorque *= 0.05;
+          if (p.gear > 10 && p.rpm < 1300) totalTorque = 0;
+
+          const gainRate = 1000 * gearFactor * Math.max(0.0, totalTorque); 
           rpmChange = gainRate * deltaTime;
       }
       p.rpm = Math.min(PHYSICS.MAX_RPM, Math.max(PHYSICS.IDLE_RPM, p.rpm + rpmChange));
 
       // Audio
-      try { audioEngine.updateRPM(p.rpm); } catch(e){}
+      try { 
+          audioEngine.updateRPM(p.rpm); 
+          // Optional: Update turbo sound volume if supported
+          if(audioEngine.turboGain) audioEngine.turboGain.gain.value = p.turbo * 0.5;
+      } catch(e){}
 
       // 2. Speed (km/h)
       // Target Speed = (RPM / Ratio) * Constant
-      // Access NEW ratio object structure (.r)
-      const ratioObj = GEARBOXES['12'].ratios[p.gear - 1] || { r: 3.5 };
-      const ratio = ratioObj.r;
+      // Hybrid Access: Handle both Object (new) and Number (old cached) formats
+      const rawRatio = GEARBOXES['12'].ratios[p.gear - 1];
+      let ratio = 3.5; // Default fallback
+      
+      if (rawRatio) {
+          if (typeof rawRatio === 'object' && rawRatio.r) {
+              ratio = rawRatio.r; // New format { r: 6.0, ... }
+          } else if (typeof rawRatio === 'number') {
+              ratio = rawRatio; // Old format (number)
+          }
+      }
+
       const targetSpeed = (p.rpm / ratio) * PHYSICS.SPEED_CONSTANT;
 
       // Inertia
-      if (p.speed < targetSpeed) {
-          p.speed += (targetSpeed - p.speed) * PHYSICS.INERTIA * deltaTime;
+      // NaN Protection for Speed
+      if (isNaN(p.speed)) p.speed = 0;
+      let validTargetSpeed = isNaN(targetSpeed) ? 0 : targetSpeed;
+      
+      if (p.speed < validTargetSpeed) {
+          p.speed += (validTargetSpeed - p.speed) * PHYSICS.INERTIA * deltaTime;
       } else {
-          p.speed -= (p.speed - targetSpeed) * (PHYSICS.INERTIA * 0.5) * deltaTime;
+          p.speed -= (p.speed - validTargetSpeed) * (PHYSICS.INERTIA * 0.5) * deltaTime;
       }
 
       // 3. Distance
       p.distance += (p.speed / 3.6) * deltaTime;
 
-      // 4. Engine Health Check (Simplified)
-      if (p.rpm > 2100) {
-          p.engineHealth -= 20 * deltaTime; // Quick death at redline
-      } else {
-          p.engineHealth = 100; // Instantly recover if safe (arcade style)
-      }
+      // 4. Engine Temperature Physics (Realistic Thermal Inertia)
+      let heatRate = 0;
 
-      if (p.engineHealth <= 0) { // Boom Threshold
+      if (p.rpm > 2300) {
+          // CRITICAL MELTDOWN (>2300 RPM)
+          // Rises explosively fast. 90 -> 120 in ~1.5 seconds.
+          heatRate = 20 * deltaTime; 
+      } else if (p.rpm > 1900) {
+          // OVERHEATING (>1900 RPM)
+          // Rises steadily. The deeper in the red, the faster.
+          // 1900rpm = +1 deg/sec
+          // 2300rpm = +5 deg/sec
+          const severity = (p.rpm - 1900) / 400; 
+          heatRate = (1.0 + (severity * 4.0)) * deltaTime;
+      } else if (p.rpm > 1200) {
+          // OPERATING RANGE (1200 - 1900 RPM)
+          // Thermostat Logic: Tries to maintain ~90-95C
+          if (p.temp < 92) heatRate = 1.5 * deltaTime; // Warm up to optimal
+          else if (p.temp > 95) heatRate = -0.2 * deltaTime; // Thermostat opens, slow cool
+      } else {
+          // IDLE / LOW LOAD (< 1200 RPM)
+          // Heat Soak: Massive iron block holds heat. Cools VERY slowly.
+          // Will basically never drop below 80C while running.
+          if (p.temp > 85) heatRate = -0.5 * deltaTime; // Very slow cool down
+          else if (p.temp < 80) heatRate = 2.0 * deltaTime; // Reheat to min op temp
+      }
+      
+      p.temp = Math.max(80, p.temp + heatRate); // Never drops below 80C
+
+      if (p.temp >= 120) { // Boom Threshold
           setGameState('blown_coasting');
           try { audioEngine.explode(); } catch(e){}
-          // Play LOSE sound
           const loseSfx = new Audio('/try_again.wav');
           loseSfx.volume = 1.0;
           loseSfx.play().catch(e => {});
@@ -251,7 +315,17 @@ function App() {
       setSpeed(Math.round(p.speed));
       setDistance(Math.round(p.distance));
       setGear(p.gear);
-      setRedlineWarning(p.rpm > PHYSICS.REDLINE_RPM);
+      setTemp(p.temp); 
+      setTurbo(p.turbo); 
+      
+      // Tiered Warning Effects
+      if (p.rpm > 2300) {
+          setUiEffect('shaking');
+      } else if (p.rpm > 1900 || p.temp > 100) {
+          setUiEffect('vibrating');
+      } else {
+          setUiEffect('');
+      }
 
       // --- Driver Face Logic ---
       if (gameState === 'blown_coasting' || gameState === 'exploded') {
@@ -291,8 +365,13 @@ function App() {
           } catch(e){}
           
           const finalSpd = Math.round(physics.current.speed);
+          
+          const params = new URLSearchParams(window.location.search);
+          const gId = params.get('gameId') || 'room1';
+          
           socket.emit('finish_race', { 
-              gameId: 'room1', 
+              gameId: gId, 
+              playerId: playerId, // Use state
               time: finalTime,
               speed: finalSpd 
           });
@@ -318,13 +397,17 @@ function App() {
           p.isShifting = true;
           try { audioEngine.triggerShiftSound(); } catch(e){}
 
-          // Reaction based on dynamic per-gear zones
-          const currentGearData = GEARBOXES['12'].ratios[p.gear - 1]; // Current gear info
-          const nextGearData = GEARBOXES['12'].ratios[p.gear];        // Next gear info
+          // Helper for Hybrid Data Access
+          const getGearData = (idx) => GEARBOXES['12'].ratios[idx];
+          const getRatio = (data, def) => (data && typeof data === 'object') ? data.r : (typeof data === 'number' ? data : def);
+          const getMin = (data) => (data && data.min) ? data.min : 1400;
+          const getMax = (data) => (data && data.max) ? data.max : 1900;
 
-          // Default fallback zones if data missing
-          const optMin = currentGearData ? currentGearData.min : 1400;
-          const optMax = currentGearData ? currentGearData.max : 1900;
+          const currentData = getGearData(p.gear - 1);
+          const nextData = getGearData(p.gear);
+
+          const optMin = getMin(currentData);
+          const optMax = getMax(currentData);
 
           if (p.rpm >= optMin && p.rpm <= optMax) {
               setDriverFace('(^_^)');
@@ -333,15 +416,25 @@ function App() {
           }
 
           // Calculate Drop
-          const currentRatio = currentGearData ? currentGearData.r : 3.5;
-          const nextRatio = nextGearData ? nextGearData.r : 0.5;
-          const dropFactor = nextRatio / currentRatio;
+          const currentRatio = getRatio(currentData, 3.5);
+          const nextRatio = getRatio(nextData, 0.5);
+          const dropFactor = nextRatio / currentRatio; // Just for reference, not used for math anymore
 
           setTimeout(() => {
               p.gear++;
               p.isShifting = false;
-              p.rpm = p.rpm * dropFactor;
-              console.log('Shift Complete. New Gear:', p.gear);
+              p.turbo = 0; // TURBO DUMP (Pshhh!) - Lose all boost on shift
+              
+              // FORCE RPM based on Speed (Anti-Spam Logic)
+              // RPM = (Speed / Constant) * Ratio
+              // This ensures if you shift too early (slow speed, high gear), RPMs drop to near zero.
+              const realRatio = getRatio(nextData, 0.5);
+              const forcedRPM = (p.speed / PHYSICS.SPEED_CONSTANT) * realRatio;
+              
+              // Add a tiny bit of "slip" (10%) so it doesn't feel robotic, but mostly strict math
+              p.rpm = Math.max(PHYSICS.IDLE_RPM, forcedRPM); 
+
+              console.log('Shift Complete. New Gear:', p.gear, 'RPM Drop to:', p.rpm);
           }, PHYSICS.SHIFT_TIME_MS);
       }
   };
@@ -370,14 +463,14 @@ function App() {
   // --- Render ---
   return (
     <div className="App">
-      <div className={redlineWarning ? "racing-ui shaking" : "racing-ui"}>
-            {/* NEW 6-LAYER PARALLAX SYSTEM */}
+      <div className={`racing-ui ${uiEffect}`}>
+            {/* NEW 6-LAYER PARALLAX SYSTEM (Hyper-Speed Tuned) */}
             <div className="parallax-layer bg-layer-1" style={{backgroundPositionX: `-${distance * 0.05}px`}}></div> {/* Sky/Far */}
-            <div className="parallax-layer bg-layer-2" style={{backgroundPositionX: `-${distance * 0.1}px`}}></div>
-            <div className="parallax-layer bg-layer-3" style={{backgroundPositionX: `-${distance * 0.3}px`}}></div>
-            <div className="parallax-layer bg-layer-4" style={{backgroundPositionX: `-${distance * 0.6}px`}}></div>
-            <div className="parallax-layer bg-layer-5" style={{backgroundPositionX: `-${distance * 1.5}px`}}></div>
-            <div className="parallax-layer bg-layer-6" style={{backgroundPositionX: `-${distance * 4.0}px`}}></div> {/* Front */}
+            <div className="parallax-layer bg-layer-2" style={{backgroundPositionX: `-${distance * 0.2}px`}}></div>
+            <div className="parallax-layer bg-layer-3" style={{backgroundPositionX: `-${distance * 0.5}px`}}></div>
+            <div className="parallax-layer bg-layer-4" style={{backgroundPositionX: `-${distance * 2.0}px`}}></div>
+            <div className="parallax-layer bg-layer-5" style={{backgroundPositionX: `-${distance * 6.0}px`}}></div>
+            <div className="parallax-layer bg-layer-6" style={{backgroundPositionX: `-${distance * 15.0}px`}}></div> {/* Front - WHOOSH! */}
             
             <div className="track-view">
                 {gameState === 'blown_coasting' && <div className="smoke-effect"></div>}
@@ -389,12 +482,58 @@ function App() {
             </div>
 
             <div className="hud">
+                {/* DEBUG PANEL (Temporary) */}
+                <div style={{
+                    position: 'absolute', top: '-100px', left: '10px', 
+                    background: 'rgba(0,0,0,0.8)', color: '#0f0', 
+                    padding: '5px', fontSize: '0.8rem', fontFamily: 'monospace',
+                    pointerEvents: 'none', zIndex: 100
+                }}>
+                    RPM: {rpm} <br/>
+                    Gear: {gear} <br/>
+                    Spd: {speed} <br/>
+                    Temp: {temp.toFixed(1)} <br/>
+                    Turbo: {turbo.toFixed(2)}
+                </div>
+
                 <div className="hud-top-row">
-                    {/* LEFT: RPM Gauge */}
+                    {/* LEFT: RPM Gauge + Indicators */}
                     <div className="gauge-group-left">
                         <div className="gauge rpm-gauge">
                             <div className="needle" style={{ transform: `rotate(${(rpm / PHYSICS.MAX_RPM) * 180 - 90}deg)` }}></div>
                             <span className="label">RPM</span>
+                        </div>
+                        
+                        {/* Indicators Container */}
+                        <div className="indicators-col">
+                            {/* Thermometer */}
+                            <div className="bar-vertical">
+                                <div className="bar-icon">🌡️</div>
+                                <div className="bar-bg">
+                                    <div 
+                                        className="bar-fill" 
+                                        style={{ 
+                                            height: `${Math.min(100, ((temp - 50) / 70) * 100)}%`,
+                                            backgroundColor: temp > 100 ? 'red' : temp > 90 ? 'orange' : '#00ff00' 
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            {/* Turbo Gauge */}
+                            <div className="bar-vertical">
+                                <div className="bar-icon">💨</div>
+                                <div className="bar-bg">
+                                    <div 
+                                        className="bar-fill" 
+                                        style={{ 
+                                            height: `${turbo * 100}%`,
+                                            backgroundColor: '#00ccff',
+                                            boxShadow: `0 0 ${turbo * 10}px #00ccff`
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
