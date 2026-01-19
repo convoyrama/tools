@@ -119,15 +119,14 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 .racing-ui.shaking { animation: shake 0.5s infinite; }
 
 /* New 6-Layer Parallax */
-.bg-layer-1 { background-image: url('/1.png'); z-index: 1; }
-.bg-layer-2 { background-image: url('/2.png'); z-index: 2; }
-.bg-layer-3 { background-image: url('/3.png'); z-index: 3; }
-.bg-layer-4 { background-image: url('/4.png'); z-index: 4; }
-.bg-layer-5 { background-image: url('/5.png'); z-index: 5; }
+.bg-layer-1 { background-image: var(--bg-1); z-index: 1; }
+.bg-layer-2 { background-image: var(--bg-2); z-index: 2; }
+.bg-layer-3 { background-image: var(--bg-3); z-index: 3; }
+.bg-layer-4 { background-image: var(--bg-4); z-index: 4; }
+.bg-layer-5 { background-image: var(--bg-5); z-index: 5; }
 .bg-layer-6 { 
-    background-image: url('/6.png'); 
+    background-image: var(--bg-6); 
     z-index: 6; 
-    /* Layer 6 follows standard top alignment now */
 }
 
 .parallax-layer {
@@ -216,3 +215,102 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 .racing-ui.vibrating { animation: subtleVibration 0.1s infinite; }
 .start-btn { background: #d32f2f; color: white; border: none; padding: 10px 30px; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+
+/* --- MOBILE & RESPONSIVE FIXES --- */
+
+/* 1. Generic Mobile (Portrait/Small Tablets) */
+@media (max-width: 900px) {
+  .App {
+      width: 100%;
+      height: 100dvh;
+      max-width: none;
+      aspect-ratio: unset; /* Allow flexible aspect ratio on mobile */
+      border: none;
+      box-shadow: none;
+  }
+}
+
+/* 2. LANDSCAPE MOBILE (The specific fix for horizontal phone play) */
+@media (orientation: landscape) and (max-height: 600px) {
+  .App {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden; /* Force clip */
+  }
+
+  .hud {
+      height: 35vh; /* Use relative height, not fixed pixels */
+      min-height: 80px;
+      padding: 0 10px;
+      background: linear-gradient(to top, #111 90%, transparent);
+  }
+
+  .hud-top-row {
+      margin-bottom: 2px;
+  }
+
+  /* Compact Gauges */
+  .gauge {
+      width: 12vw; /* Scale with width */
+      height: 6vw;
+      min-width: 60px;
+      min-height: 30px;
+      border-width: 2px;
+  }
+  .needle { height: 90%; }
+  .label { font-size: 0.5rem; bottom: 1px; }
+  .digital-speed { font-size: 0.8rem; bottom: 5px; }
+
+  /* Compact Indicators */
+  .bar-vertical { width: 8px; height: 8vh; min-height: 30px; }
+  .bar-icon { display: none; } /* Hide icons to save space */
+  .gauge-group-left { gap: 5px; }
+
+  /* Compact Center Panel */
+  .center-panel { margin-bottom: 0; transform: scale(0.8); transform-origin: bottom center; }
+  .gear-display {
+      font-size: 2rem;
+      padding: 0 10px;
+      border-width: 2px;
+      min-width: 30px;
+      margin-bottom: 0;
+  }
+  .digital-rpm { font-size: 0.7rem; }
+  .dist-display { font-size: 0.6rem; }
+
+  /* Compact RPM Bar */
+  .rpm-container { margin-top: 2px; }
+  .rpm-bar-bg { height: 6px; }
+  .rpm-labels { display: none; }
+
+  /* Scene Scaling */
+  .track-view {
+      bottom: 30vh; /* Sit right above the 35vh HUD with overlap */
+  }
+
+  .truck-sprite {
+      width: 25vh; /* Scale truck with screen height */
+      margin-left: 20px;
+  }
+
+  .road {
+      height: 10vh;
+      bottom: -2vh;
+  }
+
+  /* UI Elements */
+  .driver-face-standalone {
+      font-size: 1rem;
+      top: 5px;
+  }
+
+  .touch-hint {
+      font-size: 1rem;
+      padding: 5px 10px;
+      border-width: 1px;
+      top: 20%;
+  }
+  
+  .start-title { font-size: 2rem; }
+  .count-number { font-size: 4rem; }
+}

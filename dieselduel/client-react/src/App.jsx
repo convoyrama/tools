@@ -41,6 +41,7 @@ function App() {
   });
 
   const [playerId, setPlayerId] = useState(null);
+  const [bgTheme, setBgTheme] = useState('day'); // 'day' or 'night'
 
   // --- Socket & Init ---
   useEffect(() => {
@@ -49,6 +50,11 @@ function App() {
     const gId = params.get('gameId') || 'room1'; // Fallback for dev
     const pId = params.get('playerId') || 'guest'; // Fallback for dev
     setPlayerId(pId);
+
+    // Determine background theme based on gameId (deterministic for both players)
+    // We sum the char codes of the gameId. If even = day, odd = night.
+    const charSum = gId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    setBgTheme(charSum % 2 === 0 ? 'day' : 'night');
 
     socket.on('connect', () => console.log('Connected to server'));
     socket.emit('join_game', { gameId: gId, playerId: pId, username: 'Racer' });
@@ -496,9 +502,18 @@ function App() {
   }, [gameState]); // Re-bind when state changes to ensure fresh context if needed
 
   // --- Render ---
+  const bgStyles = {
+    '--bg-1': `url(/assets/backgrounds/${bgTheme}/1.png)`,
+    '--bg-2': `url(/assets/backgrounds/${bgTheme}/2.png)`,
+    '--bg-3': `url(/assets/backgrounds/${bgTheme}/3.png)`,
+    '--bg-4': `url(/assets/backgrounds/${bgTheme}/4.png)`,
+    '--bg-5': `url(/assets/backgrounds/${bgTheme}/5.png)`,
+    '--bg-6': bgTheme === 'day' ? `url(/assets/backgrounds/${bgTheme}/6.png)` : 'none',
+  };
+
   return (
     <div className="App">
-      <div className={`racing-ui ${uiEffect}`}>
+      <div className={`racing-ui ${uiEffect}`} style={bgStyles}>
             {/* NEW 6-LAYER PARALLAX SYSTEM (Hyper-Speed Tuned) */}
             <div className="parallax-layer bg-layer-1" style={{backgroundPositionX: `-${distance * 0.05}px`}}></div> {/* Sky/Far */}
             <div className="parallax-layer bg-layer-2" style={{backgroundPositionX: `-${distance * 0.2}px`}}></div>
