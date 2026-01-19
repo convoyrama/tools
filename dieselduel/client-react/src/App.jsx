@@ -536,7 +536,7 @@ function App() {
                 
                 <div className="driver-face-standalone">{driverFace}</div>
 
-                <img src="/truck.png" className="truck-sprite" alt="Truck" />
+                <img src="/truck.svg" className="truck-sprite" alt="Truck" />
                 <div className="road"></div>
             </div>
 
@@ -551,7 +551,7 @@ function App() {
                         
                         {/* Indicators Container */}
                         <div className="indicators-col">
-                            {/* Thermometer */}
+                            {/* Thermometer (Keep vertical, it's classic) */}
                             <div className="bar-vertical">
                                 <div className="bar-icon">🌡️</div>
                                 <div className="bar-bg">
@@ -565,19 +565,23 @@ function App() {
                                 </div>
                             </div>
 
-                            {/* Turbo Gauge */}
-                            <div className="bar-vertical">
-                                <div className="bar-icon">💨</div>
-                                <div className="bar-bg">
-                                    <div 
-                                        className="bar-fill" 
-                                        style={{ 
-                                            height: `${turbo * 100}%`,
-                                            backgroundColor: '#00ccff',
-                                            boxShadow: `0 0 ${turbo * 10}px #00ccff`
-                                        }}
-                                    ></div>
-                                </div>
+                            {/* NEW: Turbo Mini-Gauge (Round) */}
+                            <div className="mini-gauge turbo-mini">
+                                <div 
+                                    className="needle" 
+                                    style={{ 
+                                        transform: `rotate(${(turbo * 240) - 120}deg)`,
+                                        boxShadow: `0 0 ${turbo * 10}px #00ccff`,
+                                        backgroundColor: '#00ccff'
+                                    }}
+                                ></div>
+                                <span className="label">TURBO</span>
+                            </div>
+
+                            {/* NEW: Damage Light (Blue) */}
+                            <div className="status-light-container">
+                                <div className={`status-light ${ (temp > 105 || rpm > 2300) ? 'blue-active' : '' }`}></div>
+                                <span className="light-label">Check</span>
                             </div>
                         </div>
                     </div>
@@ -586,7 +590,7 @@ function App() {
                     <div className="center-panel">
                         <div className="gear-display">{gear === 0 ? 'N' : gear}</div>
                         <div className="digital-rpm">{rpm} RPM</div>
-                        <div className="dist-display">{(distance).toFixed(0)}m / {PHYSICS.GAME_DISTANCE}m</div>
+                        <div className="dist-display">{Math.max(0, PHYSICS.GAME_DISTANCE - distance).toFixed(0)}m</div>
                     </div>
 
                     {/* RIGHT: Speed Gauge */}
