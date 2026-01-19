@@ -1,12 +1,49 @@
-/* Symmetric Dashboard Layout */
-/* ... Reset & Layout kept same ... */
+/* Add Thermometer Styles */
+.gauge-group-left {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.thermometer {
+    width: 20px;
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.temp-bar-bg {
+    width: 10px;
+    height: 50px;
+    background: #222;
+    border: 1px solid #555;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.temp-fill {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    transition: height 0.1s linear, background-color 0.2s;
+}
+
+.temp-icon {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+/* ... Existing Styles ... */
 :root { background-color: #000; color: #fff; font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; }
 body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #000; }
 #root { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
 .App { width: 100%; max-width: 900px; aspect-ratio: 16/9; background: #333; position: relative; overflow: hidden; border: 2px solid #555; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
 
 .hud {
-  position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; /* Taller */
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; 
   background: linear-gradient(to top, #111 95%, transparent);
   color: #fff; display: flex; flex-direction: column;
   padding: 5px 20px; box-sizing: border-box; z-index: 10;
@@ -20,7 +57,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 /* Common Gauge Style */
 .gauge {
-  width: 130px; height: 65px; /* Semi-circle */
+  width: 130px; height: 65px; 
   background: #222; border-radius: 130px 130px 0 0; position: relative;
   border: 4px solid #555; overflow: hidden;
   box-shadow: inset 0 0 20px #000;
@@ -32,7 +69,6 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 }
 .label { position: absolute; bottom: 5px; width: 100%; text-align: center; font-size: 0.7rem; color: #888; z-index: 3; }
 
-/* Speed Gauge Specifics */
 .digital-speed {
     position: absolute; bottom: 20px; width: 100%; text-align: center;
     font-size: 1.2rem; font-weight: bold; font-family: monospace; color: white;
@@ -56,7 +92,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 /* Horizontal Bar */
 .rpm-container { width: 100%; }
 .rpm-bar-bg {
-    position: relative; width: 100%; height: 15px; /* Thinner */
+    position: relative; width: 100%; height: 15px; 
     background: #222; border: 1px solid #555; border-radius: 2px; overflow: hidden;
     background: linear-gradient(to right, #444 0%, #444 50%, #00aa00 50%, #00ff00 70%, #ffff00 70%, #ffa500 80%, #ff0000 90%, #880000 100%);
 }
@@ -70,56 +106,61 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 .rpm-labels { display: flex; justify-content: space-between; font-size: 0.6rem; color: #666; font-family: monospace; margin-top: 2px; }
 .danger-text { color: #d00; }
 
-/* ... Rest of styles kept identical ... */
-.racing-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-.racing-ui.shaking { animation: shake 0.5s infinite; border: 4px solid red; }
-.parallax-bg {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: repeating-linear-gradient(90deg, #444 0px, #444 50px, #555 50px, #555 100px); z-index: 1;
+/* Scene & Multi-Layer Parallax */
+.racing-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #222; }
+.racing-ui.shaking { animation: shake 0.5s infinite; }
+
+/* New 6-Layer Parallax */
+.bg-layer-1 { background-image: url('/1.png'); z-index: 1; }
+.bg-layer-2 { background-image: url('/2.png'); z-index: 2; }
+.bg-layer-3 { background-image: url('/3.png'); z-index: 3; }
+.bg-layer-4 { background-image: url('/4.png'); z-index: 4; }
+.bg-layer-5 { background-image: url('/5.png'); z-index: 5; }
+.bg-layer-6 { background-image: url('/6.png'); z-index: 6; }
+
+.parallax-layer {
+    position: absolute; 
+    top: -150px; /* Lift city up */
+    left: 0; 
+    width: 100%; 
+    height: calc(100% + 150px); /* Extend height to cover bottom */
+    background-repeat: repeat-x;
+    background-size: auto 100%; 
+    background-position: center bottom;
+    will-change: background-position;
 }
-.track-view {
-  position: absolute;
-  bottom: 180px; /* Above HUD */
-  left: 0; width: 100%;
-  z-index: 2;
-}
+
+.track-view { position: absolute; bottom: 180px; left: 0; width: 100%; z-index: 10; }
+.truck-sprite { width: 250px; margin-left: 50px; transform-origin: bottom center; position: relative; z-index: 6; }
+.road { position: absolute; bottom: 0; left: 0; width: 100%; height: 20px; background: #222; border-top: 5px solid #fff; z-index: 4; }
 
 .driver-face-standalone {
-
-    position: absolute;
-
-    top: -60px;
-
-    left: 50px;
-
-    font-family: monospace;
-
-    font-size: 2rem;
-
-    font-weight: bold;
-
-    color: white;
-
-    text-shadow: 2px 2px 0 #000;
-
-    pointer-events: none;
-
-    z-index: 10;
-
+    position: absolute; top: -60px; left: 50px; font-family: monospace; font-size: 2rem;
+    font-weight: bold; color: white; text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 10;
 }
 
-
-
-.truck-sprite {
-
- width: 250px; margin-left: 50px; transform-origin: bottom center; }
-.road { position: absolute; bottom: 0; left: 0; width: 100%; height: 20px; background: #222; border-top: 5px solid #fff; }
-
 .touch-controls { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 180px); z-index: 20; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.touch-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; color: rgba(255,255,255,0.2); font-weight: bold; border: 3px dashed rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; }
+.touch-hint {
+    position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 2rem; color: rgba(255,255,255,0.2); font-weight: bold;
+    border: 3px dashed rgba(255,255,255,0.2); padding: 20px; border-radius: 10px;
+}
+
 
 .countdown-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.6); z-index: 60; }
 .count-number { font-size: 10rem; color: yellow; text-shadow: 5px 5px 0 #000; }
+
+/* Start Overlay */
+.start-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.4); /* Semi-transparent */
+    z-index: 80; cursor: pointer;
+}
+.start-content { text-align: center; animation: pulse 1.5s infinite; }
+.start-title { font-size: 4rem; color: yellow; text-shadow: 4px 4px 0 #000; margin: 0; font-family: 'Arial Black', sans-serif; -webkit-text-stroke: 2px black; }
+.start-prompt { font-size: 2rem; color: white; font-weight: bold; text-shadow: 2px 2px 0 #000; margin-top: 10px; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
 .results { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 30px; border: 2px solid white; text-align: center; width: 80%; z-index: 70; }
 .final-time { margin: 20px 0; border: 2px solid yellow; padding: 10px; }
@@ -129,6 +170,13 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 .final-speed-text { font-size: 1.5rem; color: yellow; font-family: monospace; margin-top: 10px; border-top: 1px solid #555; padding-top: 10px; }
 .music-credits { margin-top: 30px; font-size: 0.7rem; color: #666; font-style: italic; }
 
+.smoke-effect {
+    position: absolute; bottom: 0; left: 50px; width: 200px; height: 300px;
+    background: radial-gradient(circle, rgba(100,100,100,0.9) 0%, rgba(100,100,100,0) 70%);
+    animation: smokeRise 1s infinite linear; z-index: 5; transform-origin: bottom center;
+}
+
+@keyframes smokeRise { 0% { transform: translateY(0) scale(0.5); opacity: 0.8; } 100% { transform: translateY(-200px) scale(3); opacity: 0; } }
 @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 @keyframes flashBar { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }

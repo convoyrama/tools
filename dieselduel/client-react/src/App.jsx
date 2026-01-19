@@ -8,7 +8,7 @@ const socket = io('http://localhost:3200');
 
 function App() {
   // --- UI State ---
-  const [gameState, setGameState] = useState('countdown'); // Start immediately in countdown
+  const [gameState, setGameState] = useState('waiting_start'); // Start in waiting mode
   const [countdown, setCountdown] = useState(5);
   
   // --- Visual State (Updated by loop) ---
@@ -30,7 +30,7 @@ function App() {
     gear: 0,
     speed: 0,
     distance: 0,
-    engineHealth: 100,
+    engineHealth: 100, // Reverted to generic health if needed, or just unused
     isShifting: false,
     startTime: 0,
     lastFrameTime: 0
@@ -42,11 +42,11 @@ function App() {
     socket.emit('join_game', { gameId: 'room1', username: 'Player1' });
     socket.on('opponent_finished', (data) => setOpponentTime(data.time));
 
-    // PLAY MUSIC
+    // Prepare music but don't play yet
     const tracks = ['/Dirby_day.mp3', '/Doom.mp3', '/Skirmish.mp3'];
     const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
     const audio = new Audio(randomTrack);
-    audio.volume = 0.25; // Reduced volume (was 0.4)
+    audio.volume = 0.12; 
     audio.loop = true;
     audioRef.current = audio;
     
@@ -55,6 +55,19 @@ function App() {
         if(audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     };
   }, []);
+
+  const handleStartGame = () => {
+    // 1. Initialize Audio Context (Needs user gesture)
+    audioEngine.init();
+    
+    // 2. Play Music
+    if(audioRef.current) {
+        audioRef.current.play().catch(e => console.log("Music play failed:", e));
+    }
+    
+    // 3. Start Countdown
+    setGameState('countdown');
+  };
 
   // --- Countdown Timer ---
   useEffect(() => {
@@ -162,23 +175,25 @@ function App() {
           if (p.gear >= 10) gearFactor *= 0.6; 
           if (p.gear >= 12) gearFactor *= 0.5; 
 
-          // 2. RPM Curve Factor
+          // 2. RPM Curve Factor (Universal Non-Linearity)
           let torqueCurve = 1.0;
           
-          if (p.rpm < 1300) {
-              // TURBO LAG: Low power below 1300
-              torqueCurve = 0.5 + ((p.rpm - 600) / 700) * 0.5; 
-          } else if (p.rpm >= 1300 && p.rpm <= 1900) {
-              // POWER BAND: Max torque
-              torqueCurve = 1.0;
-          } else {
-              // CHOKING: Torque drops drastically above 1900
-              // At 2500 it should be almost 0 acceleration
-              const overflow = p.rpm - 1900;
-              torqueCurve = Math.max(0.1, 1.0 - (overflow / 500)); 
+          // Friction/Load Factor: 200rpm base. Harder to spin as it goes up.
+          const frictionLoss = 1.0 - ((p.rpm - 200) / 3300);
+          
+          // Specific Diesel Power Band adjustments
+          if (p.rpm < 800) {
+              // Turbo Lag (Severe below 800)
+              torqueCurve = 0.4 + ((p.rpm - 200) / 600) * 0.6; 
+          } else if (p.rpm > 1900) {
+              // Torque Drop-off
+              torqueCurve = 1.0 - ((p.rpm - 1900) / 600); 
           }
           
-          const gainRate = 700 * gearFactor * torqueCurve; 
+          // Combine factors
+          const totalTorque = torqueCurve * frictionLoss;
+          
+          const gainRate = 1000 * gearFactor * Math.max(0.1, totalTorque); 
           rpmChange = gainRate * deltaTime;
       }
       p.rpm = Math.min(PHYSICS.MAX_RPM, Math.max(PHYSICS.IDLE_RPM, p.rpm + rpmChange));
@@ -188,7 +203,9 @@ function App() {
 
       // 2. Speed (km/h)
       // Target Speed = (RPM / Ratio) * Constant
-      const ratio = GEARBOXES['12'].ratios[p.gear - 1] || 3.5;
+      // Access NEW ratio object structure (.r)
+      const ratioObj = GEARBOXES['12'].ratios[p.gear - 1] || { r: 3.5 };
+      const ratio = ratioObj.r;
       const targetSpeed = (p.rpm / ratio) * PHYSICS.SPEED_CONSTANT;
 
       // Inertia
@@ -201,11 +218,14 @@ function App() {
       // 3. Distance
       p.distance += (p.speed / 3.6) * deltaTime;
 
-      // 4. Engine Health
-      if (p.rpm > PHYSICS.REDLINE_RPM) {
-          p.engineHealth -= (100 / (PHYSICS.ENGINE_BLOWOUT_TIME_MS / 1000)) * deltaTime;
+      // 4. Engine Health Check (Simplified)
+      if (p.rpm > 2100) {
+          p.engineHealth -= 20 * deltaTime; // Quick death at redline
+      } else {
+          p.engineHealth = 100; // Instantly recover if safe (arcade style)
       }
-      if (p.engineHealth <= 0) {
+
+      if (p.engineHealth <= 0) { // Boom Threshold
           setGameState('blown_coasting');
           try { audioEngine.explode(); } catch(e){}
           // Play LOSE sound
@@ -298,16 +318,23 @@ function App() {
           p.isShifting = true;
           try { audioEngine.triggerShiftSound(); } catch(e){}
 
-          // Reaction based on shift timing
-          if (p.rpm >= PHYSICS.OPTIMAL_MIN && p.rpm <= PHYSICS.OPTIMAL_MAX) {
+          // Reaction based on dynamic per-gear zones
+          const currentGearData = GEARBOXES['12'].ratios[p.gear - 1]; // Current gear info
+          const nextGearData = GEARBOXES['12'].ratios[p.gear];        // Next gear info
+
+          // Default fallback zones if data missing
+          const optMin = currentGearData ? currentGearData.min : 1400;
+          const optMax = currentGearData ? currentGearData.max : 1900;
+
+          if (p.rpm >= optMin && p.rpm <= optMax) {
               setDriverFace('(^_^)');
-          } else if (p.rpm < PHYSICS.OPTIMAL_MIN) {
+          } else if (p.rpm < optMin) {
               setDriverFace('(¬_¬)');
           }
 
           // Calculate Drop
-          const currentRatio = GEARBOXES['12'].ratios[p.gear - 1] || 3.5;
-          const nextRatio = GEARBOXES['12'].ratios[p.gear] || 0.5;
+          const currentRatio = currentGearData ? currentGearData.r : 3.5;
+          const nextRatio = nextGearData ? nextGearData.r : 0.5;
           const dropFactor = nextRatio / currentRatio;
 
           setTimeout(() => {
@@ -344,7 +371,13 @@ function App() {
   return (
     <div className="App">
       <div className={redlineWarning ? "racing-ui shaking" : "racing-ui"}>
-            <div className="parallax-bg" style={{backgroundPositionX: `-${distance * 10}px`}}></div>
+            {/* NEW 6-LAYER PARALLAX SYSTEM */}
+            <div className="parallax-layer bg-layer-1" style={{backgroundPositionX: `-${distance * 0.05}px`}}></div> {/* Sky/Far */}
+            <div className="parallax-layer bg-layer-2" style={{backgroundPositionX: `-${distance * 0.1}px`}}></div>
+            <div className="parallax-layer bg-layer-3" style={{backgroundPositionX: `-${distance * 0.3}px`}}></div>
+            <div className="parallax-layer bg-layer-4" style={{backgroundPositionX: `-${distance * 0.6}px`}}></div>
+            <div className="parallax-layer bg-layer-5" style={{backgroundPositionX: `-${distance * 1.5}px`}}></div>
+            <div className="parallax-layer bg-layer-6" style={{backgroundPositionX: `-${distance * 4.0}px`}}></div> {/* Front */}
             
             <div className="track-view">
                 {gameState === 'blown_coasting' && <div className="smoke-effect"></div>}
@@ -358,9 +391,11 @@ function App() {
             <div className="hud">
                 <div className="hud-top-row">
                     {/* LEFT: RPM Gauge */}
-                    <div className="gauge rpm-gauge">
-                        <div className="needle" style={{ transform: `rotate(${(rpm / PHYSICS.MAX_RPM) * 180 - 90}deg)` }}></div>
-                        <span className="label">RPM</span>
+                    <div className="gauge-group-left">
+                        <div className="gauge rpm-gauge">
+                            <div className="needle" style={{ transform: `rotate(${(rpm / PHYSICS.MAX_RPM) * 180 - 90}deg)` }}></div>
+                            <span className="label">RPM</span>
+                        </div>
                     </div>
                     
                     {/* CENTER: Gear & Digital RPM */}
@@ -404,6 +439,15 @@ function App() {
             </div>
       </div>
 
+      {gameState === 'waiting_start' && (
+         <div className="start-overlay" onClick={handleStartGame}>
+             <div className="start-content">
+                 <h1 className="start-title">DIESEL DUEL</h1>
+                 <p className="start-prompt">TAP TO START ENGINE</p>
+             </div>
+         </div>
+      )}
+
       {gameState === 'countdown' && (
          <div className="countdown-overlay">
              <h1 className="count-number">{countdown}</h1>
@@ -432,7 +476,8 @@ function App() {
 
             <div className="music-credits">
                 Music by {CREDITS.music.author} ({CREDITS.music.license}) <br/>
-                Voice by {CREDITS.voice.author} ({CREDITS.voice.license})
+                Voice by {CREDITS.voice.author} ({CREDITS.voice.license}) <br/>
+                Background by {CREDITS.background.author} ({CREDITS.background.license})
             </div>
         </div>
       )}
