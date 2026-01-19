@@ -163,6 +163,15 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
     font-weight: bold; color: white; text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 10;
 }
 
+.shift-feedback {
+    position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+    font-family: 'Arial Black', sans-serif; font-size: 1.5rem;
+    color: #FFD700; text-shadow: 0 0 10px #FFD700, 2px 2px 0 #000;
+    z-index: 20; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%) scale(1); } }
+
 .touch-controls { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 180px); z-index: 20; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .touch-hint {
     position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);

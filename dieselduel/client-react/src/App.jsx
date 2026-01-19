@@ -422,10 +422,41 @@ function App() {
           const nextRatio = getRatio(nextData, 0.5);
           const dropFactor = nextRatio / currentRatio; // Just for reference, not used for math anymore
 
+          // --- GRADUAL TURBO RETENTION LOGIC ---
+          // 1. Calculate Target RPM based on Gear
+          let baseTarget = 1800; // Low gears
+          if (p.gear >= 5) baseTarget = 1950; // Mid gears
+          if (p.gear >= 9) baseTarget = 2100; // High gears (Stretch it!)
+
+          // 2. Add Chaos Factor (+/- 25 RPM)
+          const variance = (Math.random() * 50) - 25;
+          const targetRPM = baseTarget + variance;
+
+          // 3. Calculate Distance to Target
+          // We only care how CLOSE you are to the peak.
+          // If you go OVER (e.g. 2150 vs 2100), it counts as 0 distance (Perfect)
+          // provided you didn't blow the engine (handled elsewhere).
+          const diff = Math.max(0, targetRPM - p.rpm);
+
+          // 4. Determine Reward Tier
+          let retention = 0.15; // Bronze (Minimum guaranteed)
+          
+          if (diff < 50) {
+              retention = 0.50; // Diamond (Perfect)
+          } else if (diff < 150) {
+              retention = 0.35; // Gold (Excellent)
+          } else if (diff < 300) {
+              retention = 0.25; // Silver (Good)
+          }
+
+          // console.log(`Shift Analysis: Gear ${p.gear}->${p.gear+1} | RPM: ${Math.round(p.rpm)} | Target: ${Math.round(targetRPM)} | Diff: ${Math.round(diff)} | Retain: ${retention*100}%`);
+
           setTimeout(() => {
               p.gear++;
               p.isShifting = false;
-              p.turbo = 0; // TURBO DUMP (Pshhh!) - Lose all boost on shift
+              
+              // Apply Retention
+              p.turbo = p.turbo * retention;
               
               // FORCE RPM based on Speed (Anti-Spam Logic)
               // RPM = (Speed / Constant) * Ratio
