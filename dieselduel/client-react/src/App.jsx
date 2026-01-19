@@ -4,7 +4,8 @@ import { PHYSICS, GEARBOXES, CREDITS } from './gameConfig'
 import { audioEngine } from './AudioEngine'
 import './App.css'
 
-const socket = io('http://localhost:3200');
+// Conexión al servidor en el VPS
+const socket = io('http://23.94.221.241:3200');
 
 function App() {
   // --- UI State ---
