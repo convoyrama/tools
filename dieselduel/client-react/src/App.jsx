@@ -215,10 +215,12 @@ function App() {
           // Apply Turbo Boost (Safe)
           totalTorque *= (1.0 + (p.turbo * 0.25));
           
-          // --- STALL PENALTY ---
+          // --- STALL PENALTY (Recovery Mode) ---
+          // Instead of killing the engine (0 torque), we give it "limp mode" torque.
+          // It will be agonizingly slow to recover, but possible.
           if (p.gear > 4 && p.rpm < 1000) totalTorque *= 0.2;
-          if (p.gear > 8 && p.rpm < 1200) totalTorque *= 0.05;
-          if (p.gear > 10 && p.rpm < 1300) totalTorque = 0;
+          if (p.gear > 8 && p.rpm < 1200) totalTorque *= 0.15; // Was 0.05
+          if (p.gear > 10 && p.rpm < 1300) totalTorque = 0.1;  // Was 0 (Death) -> Now 10% (Limp)
 
           const gainRate = 950 * gearFactor * Math.max(0.0, totalTorque); 
           rpmChange = gainRate * deltaTime;
