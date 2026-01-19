@@ -58,7 +58,7 @@ function App() {
     const tracks = ['/Dirby_day.mp3', '/Doom.mp3', '/Skirmish.mp3'];
     const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
     const audio = new Audio(randomTrack);
-    audio.volume = 0.06; 
+    audio.volume = 0.03; 
     audio.loop = true;
     audioRef.current = audio;
     

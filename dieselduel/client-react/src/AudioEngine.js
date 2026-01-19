@@ -24,7 +24,7 @@ class AudioEngine {
         this.ctx = new AudioContext();
         
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.5; // Overall volume
+        this.masterGain.gain.value = 0.25; // Overall volume
         this.masterGain.connect(this.ctx.destination);
 
         // --- 1. Diesel Rumble (Sawtooth Wave) ---
@@ -33,7 +33,7 @@ class AudioEngine {
         this.osc.frequency.value = 50; // Idle Hz
         
         this.engineGain = this.ctx.createGain();
-        this.engineGain.gain.value = 0.3; // Much softer rumble (was 0.8)
+        this.engineGain.gain.value = 0.15; // Much softer rumble (was 0.3)
         
         // Filter to dampen the harshness of the sawtooth
         const filter = this.ctx.createBiquadFilter();
