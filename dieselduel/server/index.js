@@ -28,7 +28,10 @@ const games = {};
 // --- GAME LOGIC HELPER ---
 const resolveGame = async (gameId, reason) => {
     const game = games[gameId];
-    if (!game) return;
+    if (!game) {
+        console.log(`Game ${gameId} already resolved or not found. Skipping.`);
+        return;
+    }
 
     console.log(`Resolving game ${gameId}. Reason: ${reason}`);
 
