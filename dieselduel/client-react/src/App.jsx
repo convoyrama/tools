@@ -21,10 +21,11 @@ function App() {
   const [opponentTime, setOpponentTime] = useState(null);
   const [finalTime, setFinalTime] = useState(0);
   const [driverFace, setDriverFace] = useState('(o_o)');
-  const [temp, setTemp] = useState(85); // Engine Temp
+  const [temp, setTemp] = useState(70); // Engine Temp
   const [turbo, setTurbo] = useState(0); // Turbo Pressure (0.0 - 1.0)
+  const [vibSpeed, setVibSpeed] = useState('0.1s'); // CSS Variable for truck vibration
 
-  // --- Music State ---
+  // ... Music State ---
   const audioRef = useRef(null);
 
   // --- Physics State (Mutable, strictly for calculations) ---
@@ -33,7 +34,7 @@ function App() {
     gear: 0,
     speed: 0,
     distance: 0,
-    temp: 85, 
+    temp: 70, 
     turbo: 0, // New Turbo State
     isShifting: false,
     startTime: 0,
@@ -133,7 +134,7 @@ function App() {
           gear: 1,   // Auto-engage 1st
           speed: 0,
           distance: 0,
-          temp: 80, // Starts at Operating Base (80C)
+          temp: 70, // Starts at Operating Base (70C)
           turbo: 0, // Turbo starts empty
           isShifting: false,
           startTime: Date.now(),
@@ -292,12 +293,12 @@ function App() {
       } else {
           // IDLE / LOW LOAD (< 1200 RPM)
           // Heat Soak: Massive iron block holds heat. Cools VERY slowly.
-          // Will basically never drop below 80C while running.
-          if (p.temp > 85) heatRate = -0.5 * deltaTime; // Very slow cool down
-          else if (p.temp < 80) heatRate = 2.0 * deltaTime; // Reheat to min op temp
+          // Will basically never drop below 70C while running.
+          if (p.temp > 75) heatRate = -0.5 * deltaTime; // Very slow cool down
+          else if (p.temp < 70) heatRate = 2.0 * deltaTime; // Reheat to min op temp
       }
       
-      p.temp = Math.max(80, p.temp + heatRate); // Never drops below 80C
+      p.temp = Math.max(70, p.temp + heatRate); // Never drops below 70C
 
       if (p.temp >= 120) { // Boom Threshold
           setGameState('blown_coasting');
@@ -328,6 +329,12 @@ function App() {
       setTemp(p.temp); 
       setTurbo(p.turbo); 
       
+      // Dynamic Vibration Speed (RPM based)
+      // 0 RPM = 0.15s (Slow rumble)
+      // 3000 RPM = 0.02s (High pitch scream vibration)
+      const newVibSpeed = Math.max(0.02, 0.15 - (p.rpm / 3000) * 0.13);
+      setVibSpeed(`${newVibSpeed.toFixed(3)}s`);
+
       // Tiered Warning Effects
       if (p.rpm > 2300) {
           setUiEffect('shaking');
@@ -374,7 +381,8 @@ function App() {
               winSfx.play().catch(e => {});
           } catch(e){}
           
-          const finalSpd = Math.round(physics.current.speed);
+          // Send speed with 1 decimal precision (e.g. 140.5)
+          const finalSpd = Number(physics.current.speed.toFixed(1));
           
           const params = new URLSearchParams(window.location.search);
           const gId = params.get('gameId') || 'room1';
@@ -509,6 +517,7 @@ function App() {
     '--bg-4': `url(/assets/backgrounds/${bgTheme}/4.png)`,
     '--bg-5': `url(/assets/backgrounds/${bgTheme}/5.png)`,
     '--bg-6': bgTheme === 'day' ? `url(/assets/backgrounds/${bgTheme}/6.png)` : 'none',
+    '--vib-speed': vibSpeed,
   };
 
   return (

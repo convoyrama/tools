@@ -142,7 +142,21 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 }
 
 .track-view { position: absolute; bottom: 180px; left: 0; width: 100%; z-index: 10; }
-.truck-sprite { width: 250px; margin-left: 50px; transform-origin: bottom center; position: relative; z-index: 6; }
+.truck-sprite { 
+    width: 250px; 
+    margin-left: 50px; 
+    transform-origin: bottom center; 
+    position: relative; 
+    z-index: 6; 
+    animation: engineIdle var(--vib-speed, 0.1s) infinite;
+}
+
+@keyframes engineIdle {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(1px); }
+    100% { transform: translateY(0); }
+}
+
 /* ROAD FIX: Increased height and z-index blocking */
 .road { 
     position: absolute; 
