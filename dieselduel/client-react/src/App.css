@@ -194,13 +194,13 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 .parallax-layer {
     position: absolute; 
-    top: 0; 
+    top: -50px; /* Shifted up to crop the top */
     left: 0; 
     width: 100%; 
-    height: 100%; 
+    height: calc(100% + 50px); /* Extra height to cover the gap */
     background-repeat: repeat-x;
     background-size: auto 100%; 
-    background-position: top; /* Strictly aligned to the top */
+    background-position: top;
     will-change: background-position;
 }
 
@@ -213,7 +213,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
     z-index: 6; 
     animation: engineIdle var(--vib-speed, 0.1s) infinite;
     display: block;
-    margin-bottom: -30px; /* Lowered by another 10px (Total -30px) */
+    margin-bottom: -40px; /* Lowered by another 10px (Total -40px) */
 }
 
 @keyframes engineIdle {
@@ -317,6 +317,11 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
       overflow: hidden; /* Force clip */
   }
 
+  .parallax-layer {
+      top: -10vh; /* Shift background up in mobile */
+      height: calc(100% + 10vh);
+  }
+
   .hud {
       height: 35vh; /* Use relative height, not fixed pixels */
       min-height: 80px;
@@ -378,7 +383,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
   .truck-sprite {
       width: 25vh; /* Scale truck with screen height */
       margin-left: 20px;
-      margin-bottom: -6vh; /* Lowered relative to previous -4vh */
+      margin-bottom: -8vh; /* Lowered even more (Total -8vh) */
   }
 
   .road {
