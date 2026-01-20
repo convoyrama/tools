@@ -580,52 +580,52 @@ function App() {
                         </div>
                     </div>
 
-                    {/* CENTER PANEL (Restored to Bottom) */}
-                    <div className="center-panel">
-                        {/* Thermometer */}
-                        <div className="bar-vertical center-thermometer">
-                            <div className="bar-icon">🌡️</div>
-                            <div className="bar-bg">
-                                <div 
-                                    className="bar-fill" 
-                                    style={{ 
-                                        height: `${Math.min(100, ((temp - 50) / 70) * 100)}%`,
-                                        backgroundColor: temp > 100 ? 'red' : temp > 90 ? 'orange' : '#00ff00' 
-                                    }}
-                                ></div>
-                            </div>
-                        </div>
-
-                        <div className="gear-display">{gear === 0 ? 'N' : gear}</div>
-                        
-                        {/* Right Side: Turbo + Check Light */}
-                        <div className="center-right-group">
-                            {/* Turbo Mini-Gauge */}
-                            <div className="mini-gauge turbo-mini">
-                                <div 
-                                    className="needle" 
-                                    style={{ 
-                                        transform: `rotate(${(turbo * 240) - 120}deg)`,
-                                        boxShadow: `0 0 ${turbo * 10}px #00ccff`,
-                                        backgroundColor: '#00ccff'
-                                    }}
-                                ></div>
-                                <span className="label">TURBO</span>
-                            </div>
-
-                            {/* Damage Light */}
-                            <div className="status-light-container">
-                                <div className={`status-light ${ 
-                                    (temp > 108 || rpm > 2350) ? 'blue-active' : 
-                                    (temp > 98 || rpm > 2100) ? 'blue-blinking' : '' 
-                                }`}></div>
-                                <span className="light-label">Check</span>
-                            </div>
-                        </div>
-
-                        <div className="digital-rpm">{rpm} RPM</div>
-                        <div className="dist-display">{Math.max(0, PHYSICS.GAME_DISTANCE - distance).toFixed(0)}m</div>
+            {/* CENTER PANEL (Moved to Top) */}
+            <div className="center-panel">
+                {/* Thermometer - NOW HORIZONTAL */}
+                <div className="bar-horizontal center-thermometer">
+                    <div className="bar-icon">🌡️</div>
+                    <div className="bar-bg-h">
+                        <div 
+                            className="bar-fill-h" 
+                            style={{ 
+                                width: `${Math.min(100, ((temp - 50) / 70) * 100)}%`,
+                                backgroundColor: temp > 100 ? 'red' : temp > 90 ? 'orange' : '#00ff00' 
+                            }}
+                        ></div>
                     </div>
+                </div>
+
+                <div className="gear-display">{gear === 0 ? 'N' : gear}</div>
+                
+                {/* Right Side: Turbo + Check Light - NOW SIDE-BY-SIDE */}
+                <div className="center-right-group">
+                    {/* Turbo Mini-Gauge */}
+                    <div className="mini-gauge turbo-mini">
+                        <div 
+                            className="needle" 
+                            style={{ 
+                                transform: `rotate(${(turbo * 240) - 120}deg)`,
+                                boxShadow: `0 0 ${turbo * 10}px #00ccff`,
+                                backgroundColor: '#00ccff'
+                            }}
+                        ></div>
+                        <span className="label">TURBO</span>
+                    </div>
+
+                    {/* Damage Light - Moved to Right of Turbo */}
+                    <div className="status-light-container">
+                        <div className={`status-light ${ 
+                            (temp > 108 || rpm > 2350) ? 'blue-active' : 
+                            (temp > 98 || rpm > 2100) ? 'blue-blinking' : '' 
+                        }`}></div>
+                        <span className="light-label">Check</span>
+                    </div>
+                </div>
+
+                <div className="digital-rpm">{rpm} RPM</div>
+                <div className="dist-display">{Math.max(0, PHYSICS.GAME_DISTANCE - distance).toFixed(0)}m</div>
+            </div>
                 </div>
 
                 {/* BOTTOM: Horizontal RPM Bar */}

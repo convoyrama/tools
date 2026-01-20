@@ -182,19 +182,42 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 .center-thermometer {
     position: absolute;
-    left: -50px; /* Increased spacing */
-    bottom: 30px; /* Lowered further from 35px */
-    height: 70px; /* Restored original height */
+    left: -100px; /* Adjusted for horizontal width */
+    bottom: 60px; 
+}
+
+.bar-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 2px 5px;
+}
+
+.bar-bg-h {
+    width: 60px;
+    height: 8px;
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.bar-fill-h {
+    height: 100%;
+    transition: width 0.1s linear, background-color 0.2s;
 }
 
 .center-right-group {
     position: absolute;
     left: 110px; /* Pushed to the right side of the gear box */
-    bottom: 25px; /* Lowered further from 30px */
+    bottom: 65px; 
     display: flex;
-    flex-direction: column;
+    flex-direction: row; /* Side by side */
     align-items: center;
-    gap: 5px;
+    gap: 10px;
 }
 
 /* Mini Gauges & Lights */
