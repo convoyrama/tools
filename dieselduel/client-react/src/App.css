@@ -61,6 +61,17 @@
     text-transform: uppercase;
 }
 
+.logo-watermark {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 60px;
+    height: auto;
+    z-index: 50;
+    opacity: 0.8;
+    pointer-events: none; /* Let clicks pass through */
+}
+
 /* Indicators (Thermometer + Turbo) */
 .gauge-group-left {
     display: flex;
@@ -308,7 +319,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 @keyframes engineIdle {
     0% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(1px); }
+    50% { transform: translateX(-50%) translateY(0.5px); } /* Reduced from 1px to 0.5px */
     100% { transform: translateX(-50%) translateY(0); }
 }
 

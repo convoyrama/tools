@@ -541,14 +541,15 @@ function App() {
 
   return (
     <div className="App">
+      <img src="/logowLS.png" className="logo-watermark" alt="LS Logo" />
       <div className={`racing-ui ${uiEffect}`} style={bgStyles}>
             {/* NEW 6-LAYER PARALLAX SYSTEM (Hyper-Speed Tuned) */}
             <div className="parallax-layer bg-layer-1" style={{backgroundPositionX: `-${distance * 0.05}px`}}></div> {/* Sky/Far */}
             <div className="parallax-layer bg-layer-2" style={{backgroundPositionX: `-${distance * 0.2}px`}}></div>
             <div className="parallax-layer bg-layer-3" style={{backgroundPositionX: `-${distance * 0.5}px`}}></div>
-            <div className="parallax-layer bg-layer-4" style={{backgroundPositionX: `-${distance * 2.0}px`}}></div>
-            <div className="parallax-layer bg-layer-5" style={{backgroundPositionX: `-${distance * 6.0}px`}}></div>
-            <div className="parallax-layer bg-layer-6" style={{backgroundPositionX: `-${distance * 15.0}px`}}></div> {/* Front - WHOOSH! */}
+            <div className="parallax-layer bg-layer-4" style={{backgroundPositionX: `-${distance * 4.0}px`}}></div> {/* Increased from 2.0 */}
+            <div className="parallax-layer bg-layer-5" style={{backgroundPositionX: `-${distance * 10.0}px`}}></div> {/* Increased from 6.0 */}
+            <div className="parallax-layer bg-layer-6" style={{backgroundPositionX: `-${distance * 30.0}px`}}></div> {/* Front - WHOOSH! (Doubled) */}
             
             <div className="track-view">
                 {gameState === 'blown_coasting' && <div className="smoke-effect"></div>}
