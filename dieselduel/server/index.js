@@ -21,21 +21,18 @@ const io = new Server(server, {
 // --- CONFIGURACIÓN DE RECURSOS ---
 const MAX_CONCURRENT_GAMES = 3; // Límite duro de 3 partidas
 const GAME_TIMEOUT_MS = 3 * 60 * 1000; // 3 Minutos
+const SPAM_COOLDOWN_MS = 30000; // 30 Segundos entre creaciones por IP
 
 // Store active game sessions
 const games = {};
+// Simple In-Memory Rate Limiter
+const requestLog = {}; 
 
 // --- GAME LOGIC HELPER ---
 const resolveGame = async (gameId, reason) => {
     const game = games[gameId];
-    if (!game) {
-        console.log(`Game ${gameId} already resolved or not found. Skipping.`);
-        return;
-    }
+    if (!game) return;
 
-    console.log(`Resolving game ${gameId}. Reason: ${reason}`);
-
-    // Limpiar el Timeout para que no se ejecute dos veces
     if (game.timeoutId) clearTimeout(game.timeoutId);
 
     const p1Id = Object.keys(game.players)[0];
@@ -43,75 +40,69 @@ const resolveGame = async (gameId, reason) => {
     const p1 = game.players[p1Id];
     const p2 = game.players[p2Id];
 
-    // Determinar estado
+    // ... (Lógica de Ganador igual que antes) ...
     let winner = null;
     let loser = null;
-    let type = 'draw'; // draw, vs, forfeit, expired
+    let type = 'draw';
 
-    // Caso 1: Ambos terminaron (VS normal)
     if (p1.finished && p2.finished) {
         type = 'vs';
-        if (p1.time < p2.time) { 
-            winner = p1; loser = p2; 
-        } else if (p2.time < p1.time) { 
-            winner = p2; loser = p1; 
-        } else {
-            // Empate exacto en tiempo: Desempate por Velocidad
-            if (p1.speed > p2.speed) { winner = p1; loser = p2; }
-            else { winner = p2; loser = p1; }
-        }
+        if (p1.time < p2.time) { winner = p1; loser = p2; } 
+        else if (p2.time < p1.time) { winner = p2; loser = p1; } 
+        else { if (p1.speed > p2.speed) { winner = p1; loser = p2; } else { winner = p2; loser = p1; } }
     }
-    // Caso 2: Solo P1 terminó (P2 abandonó)
-    else if (p1.finished && !p2.finished) {
-        type = 'forfeit';
-        winner = p1;
-        loser = p2;
-    }
-    // Caso 3: Solo P2 terminó (P1 abandonó)
-    else if (!p1.finished && p2.finished) {
-        type = 'forfeit';
-        winner = p2;
-        loser = p1;
-    }
-    // Caso 4: Nadie terminó (Expiró)
-    else {
-        type = 'expired';
-    }
+    else if (p1.finished && !p2.finished) { type = 'forfeit'; winner = p1; loser = p2; }
+    else if (!p1.finished && p2.finished) { type = 'forfeit'; winner = p2; loser = p1; }
+    else { type = 'expired'; }
 
-    // Enviar a Robotito si hubo al menos un corredor
+    // Enviar a Robotito
     if (type !== 'expired' && type !== 'draw') {
         try {
             const robotitoUrl = process.env.ROBOTITO_URL || 'http://localhost:3000';
             await axios.post(`${robotitoUrl}/api/diesel-result`, {
-                type: type, // 'vs' or 'forfeit'
-                winner: winner,
-                loser: loser,
-                channelId: game.channelId,
-                gameId: gameId
+                type: type, winner: winner, loser: loser, channelId: game.channelId, gameId: gameId
             });
-            console.log(`Result sent to Robotito for game ${gameId}`);
         } catch (err) {
-            if (err.code === 'ECONNREFUSED') {
-                console.log('Robotito not found (Local/Offline). Result not sent, but game finished.');
-            } else {
-                console.error('Failed to send result to Robotito:', err.message);
+            // Silenced
+        }
+    }
+
+    // --- AGGRESSIVE CLEANUP (RAM SAVER) ---
+    // Desconectar sockets para liberar memoria del servidor inmediatamente
+    Object.values(game.players).forEach(p => {
+        if (p.socketId) {
+            const socket = io.sockets.sockets.get(p.socketId);
+            if (socket) {
+                socket.disconnect(true); // Force disconnect
             }
         }
-    } else {
-        console.log(`Game ${gameId} expired without results.`);
-    }
+    });
 
     // Limpieza final
     delete games[gameId];
-    console.log(`Game ${gameId} cleaned up. Active games: ${Object.keys(games).length}`);
 };
 
 // API to create a race (called by Discord Bot)
 app.post('/api/create-race', (req, res) => {
+    // 0. RATE LIMITING (Anti-Spam)
+    const ip = req.ip || req.socket.remoteAddress;
+    const now = Date.now();
+    
+    if (requestLog[ip] && now - requestLog[ip] < SPAM_COOLDOWN_MS) {
+        return res.status(429).json({ error: 'Too many requests. Wait 30s.' });
+    }
+    requestLog[ip] = now; // Update timestamp
+
+    // Clean old IPs from memory occasionally
+    if (Object.keys(requestLog).length > 100) {
+        for (const key in requestLog) {
+            if (now - requestLog[key] > SPAM_COOLDOWN_MS) delete requestLog[key];
+        }
+    }
+
     // 1. Check Capacity
     const currentGames = Object.keys(games).length;
     if (currentGames >= MAX_CONCURRENT_GAMES) {
-        console.log(`Rejected creation. Server full (${currentGames}/${MAX_CONCURRENT_GAMES})`);
         return res.status(503).json({ error: 'Server full' });
     }
 
@@ -121,17 +112,14 @@ app.post('/api/create-race', (req, res) => {
         return res.status(400).json({ error: 'Missing player IDs' });
     }
 
-    // HANDLER AUTO-DESAFÍO (Testing)
-    // Si el usuario se reta a sí mismo, alteramos el ID del "P2" para que no colisione en el objeto.
+    // HANDLER AUTO-DESAFÍO
     let realChallengedId = challengedId;
     if (challengerId === challengedId) {
         realChallengedId = challengedId + '_clone';
-        console.log('Self-challenge detected. Cloning ID for P2.');
     }
 
     const gameId = crypto.randomUUID();
     
-    // Initialize game state
     games[gameId] = {
         id: gameId,
         channelId,
@@ -141,25 +129,16 @@ app.post('/api/create-race', (req, res) => {
             [realChallengedId]: { id: realChallengedId, username: 'Player 2 (Clone)', finished: false, time: null, speed: 0 }
         },
         createdAt: Date.now(),
-        // 2. Set Auto-Expiration Timer
         timeoutId: setTimeout(() => {
             resolveGame(gameId, 'timeout');
         }, GAME_TIMEOUT_MS)
     };
 
     const clientBaseUrl = process.env.CLIENT_URL || 'http://23.94.221.241:5200';
-    
     const challengerUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengerId}`;
-    // Usamos el ID "falso" para el enlace del P2
     const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${realChallengedId}`;
 
-    console.log(`Race created: ${gameId} (${currentGames + 1}/${MAX_CONCURRENT_GAMES} active)`);
-
-    res.json({
-        gameId,
-        challengerUrl,
-        challengedUrl
-    });
+    res.json({ gameId, challengerUrl, challengedUrl });
 });
 
 io.on('connection', (socket) => {
@@ -192,8 +171,6 @@ io.on('connection', (socket) => {
         game.players[playerId].time = time;
         game.players[playerId].speed = speed;
         
-        console.log(`Player ${playerId} finished game ${gameId}`);
-
         // Notificar al oponente (para UI)
         io.to(gameId).emit('opponent_finished', { playerId, time, speed });
 
@@ -203,9 +180,6 @@ io.on('connection', (socket) => {
         if (allFinished) {
              // Si ambos terminaron, resolvemos INMEDIATAMENTE (VS)
              resolveGame(gameId, 'all_finished');
-        } else {
-             // Si falta uno, NO hacemos nada. Esperamos al timeout o al otro jugador.
-             console.log(`Game ${gameId}: Waiting for opponent...`);
         }
     }
   });
@@ -217,6 +191,4 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3200;
 server.listen(PORT, () => {
-  console.log(`Diesel Duel Server running on port ${PORT}`);
-  console.log(`Config: Max Games=${MAX_CONCURRENT_GAMES}, Timeout=${GAME_TIMEOUT_MS/1000}s`);
 });

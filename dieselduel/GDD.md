@@ -1,6 +1,6 @@
 # Diesel Duel - Game Design Document (GDD)
 **Estado:** En Desarrollo Activo (Fase Híbrida: Online/Local)
-**Versión:** 2.0 (Post-Implementación de Físicas Avanzadas)
+**Versión:** 2.1 (Vertical Mobile UI + Future Roadmap)
 
 ## 1. Concepto General
 Un juego de "Drag Racing" (Piques/Arrancones) 1vs1 minimalista con estética retro/pixel art.
@@ -55,17 +55,23 @@ El núcleo del juego es la **gestión de recursos mecánicos** (RPM, Temperatura
 1.  **Explosión (Temp > 120°C):** Fin inmediato de la tracción.
 2.  **Stall (Ahogamiento):** Si se cambia muy pronto y las RPM caen < 1000 en marcha alta, el motor entra en "Limp Mode" (10% de torque) hasta recuperarse, perdiendo segundos valiosos.
 
-## 4. Interfaz (UI/UX)
-*   **Paralaje:** Sistema de 6 capas de profundidad (Cielo -> Montañas -> Colinas -> Árboles -> Cercas -> Pista).
-*   **HUD:**
-    *   Tacómetro analógico grande.
-    *   Medidor de Turbo (Mini-gauge).
-    *   Termómetro vertical.
-    *   Luz de "Check Engine" (Azul intermitente/fija según gravedad).
+## 4. Interfaz (UI/UX) - Mobile First
+*   **Formato:** Vertical (9:16). Centrado absoluto.
+*   **HUD Superior:** Panel de instrumentos secundario (Marcha actual, Termómetro horizontal, Turbo y Check Engine). Flotando en la parte superior.
+*   **HUD Inferior:** Cluster de conducción principal.
+    *   Relojes de RPM y Velocidad a los lados.
+    *   Barra de RPM lineal (450px) en la base.
+    *   Alineación simétrica perfecta.
 *   **Feedback Visual:**
-    *   Vibración de pantalla dinámica según RPM.
-    *   Cara del conductor animada `(o_o)` -> `(>_<)` -> `(X_X)`.
+    *   Cara del conductor centrada.
+    *   Humo negro (Rolling Coal) vinculado al camión.
 
 ## 5. Audio Dinámico
 *   El motor de audio sintetiza el tono del motor basado en las RPM en tiempo real.
 *   Efectos para Turbo, Cambio de Marcha (neumático), Explosión y Música de fondo aleatoria.
+
+## 6. Roadmap Futuro (Expansión Móvil)
+*   **Conversión a APK:** Uso de **Capacitor** para empaquetar el cliente React como App nativa de Android.
+*   **Deep Linking:** Configurar el esquema de URL para que los enlaces de Discord (`dieselduel://game/...`) abran la App directamente.
+*   **Modo Offline:** Permitir jugar contra el cronómetro o una IA simple sin conexión a internet, aprovechando que la física corre en local.
+*   **Consumo de Diesel:** Implementar mecánica de L/100km visualizada como humo o estadística final.
