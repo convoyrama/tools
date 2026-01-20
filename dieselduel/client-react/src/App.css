@@ -194,10 +194,10 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 .parallax-layer {
     position: absolute; 
-    top: -50px; /* Shifted up to crop the top */
+    top: -100px; /* Shifted up MORE (Total -100px) */
     left: 0; 
     width: 100%; 
-    height: calc(100% + 50px); /* Extra height to cover the gap */
+    height: calc(100% + 100px); /* Extra height to cover the gap */
     background-repeat: repeat-x;
     background-size: auto 100%; 
     background-position: top;
@@ -318,8 +318,8 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
   }
 
   .parallax-layer {
-      top: -10vh; /* Shift background up in mobile */
-      height: calc(100% + 10vh);
+      top: -20vh; /* Double shift up in mobile */
+      height: calc(100% + 20vh);
   }
 
   .hud {
