@@ -311,106 +311,94 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
   /* HUD Container */
   .hud {
       height: auto;
-      min-height: 140px;
-      padding: 10px 5px;
-      background: linear-gradient(to top, #000 90%, transparent); /* Darker base for contrast */
+      min-height: 120px;
+      padding: 5px;
+      background: linear-gradient(to top, #000 80%, transparent);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
   }
 
-  /* Top Row: Now only contains Left Gauges and Right Speedometer */
+  /* HUD Top Row: RPM Gauge (Left) | Indicators (Center) | Speed (Right) */
   .hud-top-row {
-      margin-bottom: 5px;
-      padding: 0;
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
       align-items: flex-end;
-      justify-content: space-between; /* Push RPM left and Speed right */
+      margin-bottom: 8px;
   }
 
-  /* 1. THE BIG MOVE: Center Panel (Gear/Stats) floats up in the sky */
+  /* Gauges sizing to fit all 3 groups */
+  .gauge {
+      width: 65px; /* Even smaller to fit everyone */
+      height: 35px;
+      border-width: 2px;
+  }
+  .needle { height: 30px; }
+  .digital-speed { font-size: 0.7rem; bottom: 5px; }
+
+  /* Indicators Group (Thermo, Turbo, Check) - Centered in the row */
+  .indicators-col {
+      display: flex;
+      gap: 4px;
+      align-items: flex-end;
+      margin-bottom: 2px;
+  }
+  .bar-vertical { width: 8px; height: 40px; }
+  .mini-gauge { width: 32px; height: 32px; }
+  .status-light { width: 10px; height: 10px; }
+  .light-label { display: none; } /* Hide label to save width */
+
+  /* 1. THE BIG MOVE: Gear Panel floats high above the truck */
   .center-panel {
       position: absolute;
-      top: -60vh; /* Floating high up */
+      top: -55vh; 
       left: 50%;
       transform: translateX(-50%);
-      width: 100%;
-      text-shadow: 0 0 5px black; /* Readability over background */
-      z-index: 20;
+      z-index: 30;
   }
 
   .gear-display {
-      font-size: 3.5rem;
-      background: rgba(0,0,0,0.7); /* Semi-transparent bg */
-      box-shadow: 0 0 15px rgba(0,0,0,0.8);
-      border-color: #888;
+      font-size: 3rem;
+      padding: 5px 20px;
+      background: rgba(0,0,0,0.8);
   }
-
   .digital-rpm, .dist-display {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: white;
-      background: rgba(0,0,0,0.5);
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-top: 2px;
+      font-size: 1rem;
+      background: rgba(0,0,0,0.6);
+      padding: 1px 5px;
   }
 
-  /* 2. Fix Left Group sizing */
-  .gauge-group-left { gap: 8px; }
-
-  /* 3. Driver Face - Move Up */
-  .driver-face-standalone {
-      top: 12vh; /* Higher up */
-      font-size: 2rem;
+  /* 2. THE PERFECT BAR (Bottom centered) */
+  .rpm-container {
+      width: 100%;
+      padding: 0 5px;
   }
-
-  /* Shrink Gauges slightly to fit width */
-  .gauge {
-      width: 75px;
-      height: 40px;
-      border-width: 2px;
-      flex-shrink: 0; /* Prevent squishing */
+  .rpm-bar-bg {
+      height: 14px; /* Back to being nice and visible */
+      border-width: 1px;
   }
-  
-  .speed-gauge {
-      margin-right: 5px; /* Ensure padding from edge */
-  }
-
-  .needle { height: 35px; width: 2px; }
-  .label { font-size: 0.5rem; bottom: 2px; }
-  .digital-speed { font-size: 0.8rem; bottom: 8px; }
-
-  /* Indicators */
-  .bar-vertical { width: 12px; height: 50px; }
-  .bar-icon { font-size: 0.5rem; }
-  
-  .mini-gauge { width: 35px; height: 35px; }
-  .mini-gauge .needle { height: 14px; }
-  .status-light { width: 12px; height: 12px; }
-
-  /* Bottom RPM Bar */
-  .rpm-container { margin-top: 5px; }
-  .rpm-bar-bg { height: 12px; }
   .rpm-labels { display: none; }
 
-  /* Scene Adjustments */
-  .track-view { bottom: 150px; }
+  /* 3. Scene & Driver Face */
+  .driver-face-standalone {
+      top: 8vh;
+      font-size: 0.9rem; /* Half the size (was 1.8rem) */
+  }
 
+  .track-view { bottom: 130px; }
   .truck-sprite {
-      width: 180px;
-      margin-left: 10px; /* Less margin to center better */
-      margin-bottom: -30px; 
+      width: 160px;
+      margin-left: 20px;
+      margin-bottom: -30px;
   }
 
-  /* Touch Hint */
-  .touch-hint {
-      top: 40%;
-      font-size: 1.5rem;
-      width: 80%;
-      text-align: center;
+  /* Touch Hint - Moved UP to the space between Gear Panel and Truck */
+  .touch-hint { 
+      top: 25%; /* Higher up (was 35-40%) to sit in the gap */
+      font-size: 1.2rem; 
+      padding: 10px;
   }
-  
-  /* Text Scaling */
-  .start-title { font-size: 3rem; width: 100%; text-align: center; line-height: 1; }
-  .count-number { font-size: 8rem; }
-  .results { width: 90%; }
 }
 
 /* 2. LANDSCAPE MOBILE (The specific fix for horizontal phone play) */
