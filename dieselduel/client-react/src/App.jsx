@@ -4,8 +4,12 @@ import { PHYSICS, GEARBOXES, CREDITS } from './gameConfig'
 import { audioEngine } from './AudioEngine'
 import './App.css'
 
-// Conexión al servidor en el VPS
-const socket = io('http://23.94.221.241:3200');
+// Dynamic Socket URL: Use localhost if running locally, otherwise VPS
+const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3200' 
+  : 'http://23.94.221.241:3200';
+
+const socket = io(SOCKET_URL);
 
 function App() {
   // --- UI State ---
@@ -48,8 +52,23 @@ function App() {
   useEffect(() => {
     // Parse URL params for gameId and playerId
     const params = new URLSearchParams(window.location.search);
-    const gId = params.get('gameId') || 'room1'; // Fallback for dev
-    const pId = params.get('playerId') || 'guest'; // Fallback for dev
+    let gId = params.get('gameId');
+    let pId = params.get('playerId');
+
+    // DEV MODE AUTO-FILL
+    if (!gId && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+        console.log("Localhost detected: Auto-generating Dev Session");
+        gId = 'local_dev_' + Math.floor(Math.random() * 1000);
+        pId = 'dev_racer';
+        
+        // Update URL cleanly without reload so reload works
+        window.history.replaceState({}, '', `?gameId=${gId}&playerId=${pId}`);
+    } else {
+        // Fallbacks for production edge cases
+        gId = gId || 'room1';
+        pId = pId || 'guest';
+    }
+
     setPlayerId(pId);
 
     // Determine background theme based on gameId (deterministic for both players)
@@ -534,38 +553,54 @@ function App() {
             <div className="track-view">
                 {gameState === 'blown_coasting' && <div className="smoke-effect"></div>}
                 
-                <div className="driver-face-standalone">{driverFace}</div>
-
                 <img src="/truck.svg" className="truck-sprite" alt="Truck" />
                 <div className="road"></div>
             </div>
 
+            {/* Driver Face (Moved to absolute center) */}
+            <div className="driver-face-standalone">{driverFace}</div>
+
+            {/* CENTER PANEL (Moved to Top) */}
+
             <div className="hud">
                 <div className="hud-top-row">
-                    {/* LEFT: RPM Gauge + Indicators */}
-                    <div className="gauge-group-left">
+                    <div className="dashboard-cluster">
+                        {/* LEFT: RPM Gauge */}
                         <div className="gauge rpm-gauge">
                             <div className="needle" style={{ transform: `rotate(${(rpm / PHYSICS.MAX_RPM) * 180 - 90}deg)` }}></div>
                             <span className="label">RPM</span>
                         </div>
                         
-                        {/* Indicators Container */}
-                        <div className="indicators-col">
-                            {/* Thermometer (Keep vertical, it's classic) */}
-                            <div className="bar-vertical">
-                                <div className="bar-icon">🌡️</div>
-                                <div className="bar-bg">
-                                    <div 
-                                        className="bar-fill" 
-                                        style={{ 
-                                            height: `${Math.min(100, ((temp - 50) / 70) * 100)}%`,
-                                            backgroundColor: temp > 100 ? 'red' : temp > 90 ? 'orange' : '#00ff00' 
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
+                        {/* RIGHT: Speed Gauge */}
+                        <div className="gauge speed-gauge">
+                            {/* Max speed assumed 160km/h for gauge scale */}
+                            <div className="needle" style={{ transform: `rotate(${(Math.min(speed, 160) / 160) * 180 - 90}deg)` }}></div>
+                            <span className="label">KM/H</span>
+                            <div className="digital-speed">{speed}</div>
+                        </div>
+                    </div>
 
-                            {/* NEW: Turbo Mini-Gauge (Round) */}
+                    {/* CENTER PANEL (Restored to Bottom) */}
+                    <div className="center-panel">
+                        {/* Thermometer */}
+                        <div className="bar-vertical center-thermometer">
+                            <div className="bar-icon">🌡️</div>
+                            <div className="bar-bg">
+                                <div 
+                                    className="bar-fill" 
+                                    style={{ 
+                                        height: `${Math.min(100, ((temp - 50) / 70) * 100)}%`,
+                                        backgroundColor: temp > 100 ? 'red' : temp > 90 ? 'orange' : '#00ff00' 
+                                    }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div className="gear-display">{gear === 0 ? 'N' : gear}</div>
+                        
+                        {/* Right Side: Turbo + Check Light */}
+                        <div className="center-right-group">
+                            {/* Turbo Mini-Gauge */}
                             <div className="mini-gauge turbo-mini">
                                 <div 
                                     className="needle" 
@@ -578,7 +613,7 @@ function App() {
                                 <span className="label">TURBO</span>
                             </div>
 
-                            {/* NEW: Damage Light (Blue) */}
+                            {/* Damage Light */}
                             <div className="status-light-container">
                                 <div className={`status-light ${ 
                                     (temp > 108 || rpm > 2350) ? 'blue-active' : 
@@ -587,21 +622,9 @@ function App() {
                                 <span className="light-label">Check</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    {/* CENTER: Gear & Digital RPM */}
-                    <div className="center-panel">
-                        <div className="gear-display">{gear === 0 ? 'N' : gear}</div>
+
                         <div className="digital-rpm">{rpm} RPM</div>
                         <div className="dist-display">{Math.max(0, PHYSICS.GAME_DISTANCE - distance).toFixed(0)}m</div>
-                    </div>
-
-                    {/* RIGHT: Speed Gauge */}
-                    <div className="gauge speed-gauge">
-                         {/* Max speed assumed 160km/h for gauge scale */}
-                        <div className="needle" style={{ transform: `rotate(${(Math.min(speed, 160) / 160) * 180 - 90}deg)` }}></div>
-                        <span className="label">KM/H</span>
-                        <div className="digital-speed">{speed}</div>
                     </div>
                 </div>
 
@@ -626,7 +649,7 @@ function App() {
 
             {/* Tap Zone */}
             <div className="touch-controls" onClick={shiftUp}>
-                 {gameState === 'racing' && <div className="touch-hint">TAP TO SHIFT</div>}
+                 {gameState === 'racing' && <div className="touch-hint">TAP / CLICK TO SHIFT</div>}
             </div>
       </div>
 

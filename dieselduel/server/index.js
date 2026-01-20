@@ -91,7 +91,11 @@ const resolveGame = async (gameId, reason) => {
             });
             console.log(`Result sent to Robotito for game ${gameId}`);
         } catch (err) {
-            console.error('Failed to send result to Robotito:', err.message);
+            if (err.code === 'ECONNREFUSED') {
+                console.log('Robotito not found (Local/Offline). Result not sent, but game finished.');
+            } else {
+                console.error('Failed to send result to Robotito:', err.message);
+            }
         }
     } else {
         console.log(`Game ${gameId} expired without results.`);
