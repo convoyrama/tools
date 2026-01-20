@@ -200,7 +200,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
     height: 100%; 
     background-repeat: repeat-x;
     background-size: auto 100%; 
-    background-position: center top; /* Changed from bottom to top */
+    background-position: top; /* Strictly aligned to the top */
     will-change: background-position;
 }
 
@@ -213,7 +213,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
     z-index: 6; 
     animation: engineIdle var(--vib-speed, 0.1s) infinite;
     display: block;
-    margin-bottom: -20px; /* Pull it down further into the road */
+    margin-bottom: -30px; /* Lowered by another 10px (Total -30px) */
 }
 
 @keyframes engineIdle {
@@ -378,7 +378,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
   .truck-sprite {
       width: 25vh; /* Scale truck with screen height */
       margin-left: 20px;
-      margin-bottom: -4vh; /* Relative pull down for mobile */
+      margin-bottom: -6vh; /* Lowered relative to previous -4vh */
   }
 
   .road {
