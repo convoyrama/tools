@@ -117,7 +117,8 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
   position: absolute; bottom: 0; left: 0; width: 100%; height: 180px; 
   background: linear-gradient(to top, #111 95%, transparent);
   color: #fff; display: flex; flex-direction: column;
-  padding: 5px 20px; box-sizing: border-box; z-index: 10;
+  padding: 5px 0; /* Removed horizontal padding to maximize space on mobile */
+  box-sizing: border-box; z-index: 10;
   justify-content: flex-end;
 }
 
@@ -128,13 +129,14 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 
 .dashboard-cluster {
     display: flex;
-    justify-content: space-between; /* Push gauges to the 450px edges */
+    justify-content: space-between; /* Push gauges to the edges */
     align-items: flex-end;
     position: absolute;
-    bottom: 55px; /* Original HUD area height */
+    bottom: 55px; 
     left: 50%;
     transform: translateX(-50%);
-    width: 450px; /* Exact same width as the RPM bar */
+    width: 450px; 
+    max-width: 95%; /* ELASTIC: Shrinks on small phones */
     z-index: 10;
 }
 
