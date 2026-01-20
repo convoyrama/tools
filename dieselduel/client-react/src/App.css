@@ -183,7 +183,7 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 .center-thermometer {
     position: absolute;
     left: -100px; /* Adjusted for horizontal width */
-    bottom: 65px; /* Aligned with center-right-group */
+    bottom: 85px; /* Raised to align centers visually */
 }
 
 .bar-horizontal {
