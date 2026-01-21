@@ -37,8 +37,27 @@ const resolveGame = async (gameId, reason) => {
 
     const p1Id = Object.keys(game.players)[0];
     const p2Id = Object.keys(game.players)[1];
-    const p1 = game.players[p1Id];
-    const p2 = game.players[p2Id];
+    const p1 = game.players[p1Id]; // Human (usually)
+    const p2 = game.players[p2Id]; // Robotito (if isBotChallenge)
+
+    // --- LOGICA BOT TRAMPOSO (Robotito Mode) ---
+    if (game.isBotChallenge) {
+        // p2 is Robotito
+        // Generar tiempo para Robotito basado en el desempeño del humano
+        if (p1.finished) {
+            // Si el humano terminó, Robotito le gana por poco (10ms a 500ms menos)
+            const margin = Math.floor(Math.random() * 490) + 10; // 10ms - 500ms
+            p2.time = Math.max(1000, p1.time - margin); // Nunca menos de 1 segundo (seguridad)
+            p2.speed = p1.speed + (Math.random() * 10 + 2); // Un poco más rápido
+            p2.finished = true;
+        } else {
+            // Si el humano no terminó (timeout o forfeit), Robotito hace un tiempo decente random
+            // Random entre 14.5s (14500ms) y 16.0s (16000ms)
+            p2.time = Math.floor(Math.random() * 1500) + 14500;
+            p2.speed = 120 + Math.random() * 20; 
+            p2.finished = true;
+        }
+    }
 
     // ... (Lógica de Ganador igual que antes) ...
     let winner = null;
@@ -60,7 +79,12 @@ const resolveGame = async (gameId, reason) => {
         try {
             const robotitoUrl = process.env.ROBOTITO_URL || 'http://localhost:3000';
             await axios.post(`${robotitoUrl}/api/diesel-result`, {
-                type: type, winner: winner, loser: loser, channelId: game.channelId, gameId: gameId
+                type: type, 
+                winner: winner, 
+                loser: loser, 
+                channelId: game.channelId, 
+                gameId: gameId,
+                skipLeaderboard: game.isBotChallenge // Skip si es Robotito
             });
         } catch (err) {
             // Silenced
@@ -106,7 +130,7 @@ app.post('/api/create-race', (req, res) => {
         return res.status(503).json({ error: 'Server full' });
     }
 
-    let { challengerId, challengedId, channelId } = req.body;
+    let { challengerId, challengedId, channelId, isBotChallenge } = req.body;
     
     if (!challengerId || !challengedId) {
         return res.status(400).json({ error: 'Missing player IDs' });
@@ -124,6 +148,7 @@ app.post('/api/create-race', (req, res) => {
         id: gameId,
         channelId,
         status: 'active',
+        isBotChallenge: !!isBotChallenge, // Flag para Modo Robotito
         players: {
             [challengerId]: { id: challengerId, username: 'Player 1', finished: false, time: null, speed: 0 },
             [realChallengedId]: { id: realChallengedId, username: 'Player 2 (Clone)', finished: false, time: null, speed: 0 }
