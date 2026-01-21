@@ -199,6 +199,12 @@ io.on('connection', (socket) => {
         // Notificar al oponente (para UI)
         io.to(gameId).emit('opponent_finished', { playerId, time, speed });
 
+        // LOGIC PARA MODO ROBOTITO: Resolver inmediatamente
+        if (game.isBotChallenge) {
+            resolveGame(gameId, 'bot_challenge_finished');
+            return;
+        }
+
         // VERIFICAR SI AMBOS TERMINARON
         const allFinished = Object.values(game.players).every(p => p.finished);
         
