@@ -159,6 +159,10 @@ function App() {
           startTime: Date.now(),
           lastFrameTime: Date.now()
       };
+      
+      // Restart Audio Engine (Reset Gains and Oscillators)
+      audioEngine.restart();
+      
       setGameState('racing');
   };
 
@@ -542,6 +546,7 @@ function App() {
   return (
     <div className="App">
       <img src="/logowLS.png" className="logo-watermark" alt="LS Logo" />
+      <img src="/DDlogo.png" className="logo-diesel-duel-watermark" alt="DD Logo" />
       <div className={`racing-ui ${uiEffect}`} style={bgStyles}>
             {/* NEW 6-LAYER PARALLAX SYSTEM (Hyper-Speed Tuned) */}
             <div className="parallax-layer bg-layer-1" style={{backgroundPositionX: `-${distance * 0.05}px`}}></div> {/* Sky/Far */}
@@ -559,7 +564,7 @@ function App() {
             </div>
 
             {/* Driver Face (Moved to absolute center) */}
-            <div className="driver-face-standalone">{driverFace}</div>
+            {gameState !== 'waiting_start' && <div className="driver-face-standalone">{driverFace}</div>}
 
             {/* CENTER PANEL (Moved to Top) */}
 
@@ -657,7 +662,7 @@ function App() {
       {gameState === 'waiting_start' && (
          <div className="start-overlay" onClick={handleStartGame}>
              <div className="start-content">
-                 <h1 className="start-title">DIESEL DUEL</h1>
+                 <img src="/DDlogo.png" className="start-logo" alt="Diesel Duel" />
                  <p className="start-prompt">TAP TO START ENGINE</p>
              </div>
          </div>

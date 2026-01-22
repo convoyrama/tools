@@ -9,6 +9,7 @@ class AudioEngine {
         // Engine Tone
         this.osc = null;
         this.engineGain = null;
+        this.filter = null; // Stored filter reference
         
         // Turbo Whistle
         this.turboOsc = null;
@@ -28,37 +29,73 @@ class AudioEngine {
         this.masterGain.connect(this.ctx.destination);
 
         // --- 1. Diesel Rumble (Sawtooth Wave) ---
-        this.osc = this.ctx.createOscillator();
-        this.osc.type = 'sawtooth'; // Buzzy, aggressive sound
-        this.osc.frequency.value = 50; // Idle Hz
-        
         this.engineGain = this.ctx.createGain();
-        this.engineGain.gain.value = 0.15; // Much softer rumble (was 0.3)
-        
-        // Filter to dampen the harshness of the sawtooth
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 400;
-
-        this.osc.connect(filter);
-        filter.connect(this.engineGain);
+        this.engineGain.gain.value = 0.15; // Much softer rumble
         this.engineGain.connect(this.masterGain);
-        
-        this.osc.start();
+
+        // Filter to dampen the harshness of the sawtooth
+        this.filter = this.ctx.createBiquadFilter();
+        this.filter.type = 'lowpass';
+        this.filter.frequency.value = 400;
+        this.filter.connect(this.engineGain);
+
+        this.startOscillators();
 
         // --- 2. Turbo Whistle (Sine Wave) ---
+        this.turboGain = this.ctx.createGain();
+        this.turboGain.gain.value = 0; // Starts silent
+        this.turboGain.connect(this.masterGain);
+
+        this.startTurboOscillator();
+
+        this.initialized = true;
+    }
+
+    startOscillators() {
+        // Diesel Rumble
+        this.osc = this.ctx.createOscillator();
+        this.osc.type = 'sawtooth'; 
+        this.osc.frequency.value = 50; 
+        this.osc.connect(this.filter);
+        this.osc.start();
+    }
+
+    startTurboOscillator() {
+        // Turbo Whistle
         this.turboOsc = this.ctx.createOscillator();
         this.turboOsc.type = 'sine';
         this.turboOsc.frequency.value = 0;
-        
-        this.turboGain = this.ctx.createGain();
-        this.turboGain.gain.value = 0; // Starts silent
-
         this.turboOsc.connect(this.turboGain);
-        this.turboGain.connect(this.masterGain);
         this.turboOsc.start();
+    }
 
-        this.initialized = true;
+    restart() {
+        if (!this.initialized) {
+            this.init();
+            return;
+        }
+
+        // Resume context if suspended (browser policy)
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+
+        const now = this.ctx.currentTime;
+        
+        // Reset Gains
+        this.engineGain.gain.cancelScheduledValues(now);
+        this.engineGain.gain.setValueAtTime(0.15, now);
+        
+        this.turboGain.gain.cancelScheduledValues(now);
+        this.turboGain.gain.setValueAtTime(0, now);
+
+        // Stop old oscillators safely
+        try { this.osc.stop(); } catch(e) {}
+        try { this.turboOsc.stop(); } catch(e) {}
+
+        // Create new oscillators
+        this.startOscillators();
+        this.startTurboOscillator();
     }
 
     // Call this every frame with current RPM (0 - 3000+)
@@ -69,10 +106,6 @@ class AudioEngine {
         // Map 600 RPM -> 60Hz, 2500 RPM -> 180Hz
         const baseFreq = 50 + (rpm * 0.06); 
         this.osc.frequency.setTargetAtTime(baseFreq, this.ctx.currentTime, 0.05);
-
-        // Rumble Volume (Loudest at high load/RPM)
-        // const rumbleVol = 0.5 + (rpm / 5000); 
-        // this.engineGain.gain.setTargetAtTime(rumbleVol, this.ctx.currentTime, 0.1);
 
         // Turbo Pitch (Whistle)
         // Map RPM to high frequency (1000Hz - 4000Hz)
@@ -168,9 +201,12 @@ class AudioEngine {
 
     explode() {
         if (!this.initialized) return;
-        this.osc.stop();
-        this.turboOsc.stop();
-        // Here we could synthesize a boom, but silence is also dramatic
+        try {
+            this.osc.stop();
+            this.turboOsc.stop();
+        } catch (e) {
+            // Already stopped or invalid state
+        }
     }
 
     stop() {

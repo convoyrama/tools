@@ -72,6 +72,25 @@
     pointer-events: none; /* Let clicks pass through */
 }
 
+.logo-diesel-duel-watermark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 60px;
+    height: auto;
+    z-index: 50;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.start-logo {
+    width: 80%;
+    max-width: 300px;
+    height: auto;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
 /* Indicators (Thermometer + Turbo) */
 .gauge-group-left {
     display: flex;
