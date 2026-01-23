@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import io from 'socket.io-client'
+import { App as CapApp } from '@capacitor/app'; 
 import { PHYSICS, GEARBOXES, CREDITS } from './gameConfig'
 import { audioEngine } from './AudioEngine'
 import './App.css'
@@ -15,6 +16,7 @@ function App() {
   // --- UI State ---
   const [gameState, setGameState] = useState('waiting_start'); // Start in waiting mode
   const [countdown, setCountdown] = useState(5);
+  const [isSoloMode, setIsSoloMode] = useState(false); // Flag for practice mode
   
   // --- Visual State (Updated by loop) ---
   const [rpm, setRpm] = useState(PHYSICS.IDLE_RPM);
@@ -47,6 +49,35 @@ function App() {
 
   const [playerId, setPlayerId] = useState(null);
   const [bgTheme, setBgTheme] = useState('day'); // 'day' or 'night'
+  
+  // --- Solo Records State ---
+  const [soloRecords, setSoloRecords] = useState({ bestTime: null, bestSpeed: 0 });
+  const [isNewRecord, setIsNewRecord] = useState(false);
+
+  // --- Deep Link Listener ---
+  useEffect(() => {
+    CapApp.addListener('appUrlOpen', (data) => {
+        try {
+            // Handle dieselduel://game?gameId=...
+            const urlObj = new URL(data.url);
+            const gId = urlObj.searchParams.get('gameId');
+            const pId = urlObj.searchParams.get('playerId');
+            
+            if (gId && pId) {
+                console.log("Deep Link received:", gId, pId);
+                window.location.href = `/?gameId=${gId}&playerId=${pId}`;
+            }
+        } catch (e) {
+            console.error("Deep Link Parse Error:", e);
+        }
+    });
+
+    // Load Local Records
+    const savedRecords = localStorage.getItem('diesel_solo_records');
+    if (savedRecords) {
+        setSoloRecords(JSON.parse(savedRecords));
+    }
+  }, []);
 
   // --- Socket & Init ---
   useEffect(() => {
@@ -55,30 +86,29 @@ function App() {
     let gId = params.get('gameId');
     let pId = params.get('playerId');
 
-    // DEV MODE AUTO-FILL
+    // DEV MODE AUTO-FILL (Only on localhost)
     if (!gId && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
         console.log("Localhost detected: Auto-generating Dev Session");
         gId = 'local_dev_' + Math.floor(Math.random() * 1000);
         pId = 'dev_racer';
-        
-        // Update URL cleanly without reload so reload works
         window.history.replaceState({}, '', `?gameId=${gId}&playerId=${pId}`);
-    } else {
-        // Fallbacks for production edge cases
-        gId = gId || 'room1';
-        pId = pId || 'guest';
     }
 
-    setPlayerId(pId);
+    if (gId && pId) {
+        // ONLINE MODE
+        setPlayerId(pId);
+        setIsSoloMode(false);
+        const charSum = gId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        setBgTheme(charSum % 2 === 0 ? 'day' : 'night');
 
-    // Determine background theme based on gameId (deterministic for both players)
-    // We sum the char codes of the gameId. If even = day, odd = night.
-    const charSum = gId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-    setBgTheme(charSum % 2 === 0 ? 'day' : 'night');
-
-    socket.on('connect', () => console.log('Connected to server'));
-    socket.emit('join_game', { gameId: gId, playerId: pId, username: 'Racer' });
-    socket.on('opponent_finished', (data) => setOpponentTime(data.time));
+        socket.on('connect', () => console.log('Connected to server'));
+        socket.emit('join_game', { gameId: gId, playerId: pId, username: 'Racer' });
+        socket.on('opponent_finished', (data) => setOpponentTime(data.time));
+    } else {
+        // NO ID -> SOLO / APP MODE
+        setIsSoloMode(true);
+        setPlayerId('solo_player');
+    }
 
     // Prepare music but don't play yet
     const tracks = ['/Dirby_day.mp3', '/Doom.mp3', '/Skirmish.mp3'];
@@ -93,6 +123,15 @@ function App() {
         if(audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     };
   }, []);
+
+  const startSoloRun = () => {
+      // Setup Fake Game ID for solo run
+      setPlayerId('solo_driver');
+      setBgTheme(Math.random() > 0.5 ? 'day' : 'night');
+      setIsSoloMode(false); // Hide the "Practice" button overlay, show start overlay
+      // We don't need to join a socket room for solo practice, 
+      // the physics engine runs locally anyway.
+  };
 
   const handleStartGame = () => {
     // 1. Initialize Audio Context (Needs user gesture)
@@ -407,15 +446,45 @@ function App() {
           // Send speed with 1 decimal precision (e.g. 140.5)
           const finalSpd = Number(physics.current.speed.toFixed(1));
           
-          const params = new URLSearchParams(window.location.search);
-          const gId = params.get('gameId') || 'room1';
+          // --- UNIFIED RECORD LOGIC (Solo & Online) ---
+          const currentRecords = { ...soloRecords };
+          let recordBroken = false;
+
+          // Check Time (Lower is better)
+          if (currentRecords.bestTime === null || timeArg < currentRecords.bestTime) {
+              currentRecords.bestTime = timeArg;
+              recordBroken = true;
+          }
+
+          // Check Speed (Higher is better)
+          if (finalSpd > currentRecords.bestSpeed) {
+              currentRecords.bestSpeed = finalSpd;
+          }
+
+          if (recordBroken) {
+              setIsNewRecord(true);
+              // Play record sound if available
+          } else {
+              setIsNewRecord(false);
+          }
+
+          // Save locally
+          setSoloRecords(currentRecords);
+          localStorage.setItem('diesel_solo_records', JSON.stringify(currentRecords));
+
+          // --- ONLINE EMIT ---
+          if (!isSoloMode) {
+              const params = new URLSearchParams(window.location.search);
+              const gId = params.get('gameId') || 'room1';
+              
+              socket.emit('finish_race', { 
+                  gameId: gId, 
+                  playerId: playerId, 
+                  time: timeArg, 
+                  speed: finalSpd 
+              });
+          }
           
-          socket.emit('finish_race', { 
-              gameId: gId, 
-              playerId: playerId, // Use state
-              time: timeArg, // Use the argument passed directly
-              speed: finalSpd 
-          });
           setGameState('finished');
       } else {
           setGameState('exploded');
@@ -660,10 +729,16 @@ function App() {
       </div>
 
       {gameState === 'waiting_start' && (
-         <div className="start-overlay" onClick={handleStartGame}>
+         <div className="start-overlay" onClick={isSoloMode ? null : handleStartGame}>
              <div className="start-content">
                  <img src="/DDlogo.png" className="start-logo" alt="Diesel Duel" />
-                 <p className="start-prompt">TAP TO START ENGINE</p>
+                 {isSoloMode ? (
+                     <button className="start-btn practice-btn" onClick={startSoloRun}>
+                         PRACTICE RUN (SOLO)
+                     </button>
+                 ) : (
+                     <p className="start-prompt">TAP TO START ENGINE</p>
+                 )}
              </div>
          </div>
       )}
@@ -680,11 +755,17 @@ function App() {
             
             {gameState === 'finished' && (
                 <div className="final-time">
+                    {isNewRecord && <div className="new-record-flash">🌟 NEW RECORD! 🌟</div>}
                     <span className="time-label">TIME</span>
                     <span className="time-value">{(finalTime / 1000).toFixed(3)}s</span>
                     <div className="final-speed-text">
                          TOP SPEED: {Math.round(speed)} km/h
                     </div>
+                    {soloRecords.bestTime && (
+                        <div className="solo-stats">
+                            <small>BEST: {(soloRecords.bestTime / 1000).toFixed(3)}s | MAX: {soloRecords.bestSpeed} km/h</small>
+                        </div>
+                    )}
                 </div>
             )}
             

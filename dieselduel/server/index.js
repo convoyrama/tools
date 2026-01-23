@@ -160,10 +160,22 @@ app.post('/api/create-race', (req, res) => {
     };
 
     const clientBaseUrl = process.env.CLIENT_URL || 'http://23.94.221.241:5200';
+    
+    // Web URLs
     const challengerUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengerId}`;
     const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${realChallengedId}`;
 
-    res.json({ gameId, challengerUrl, challengedUrl });
+    // App URLs (Custom Scheme)
+    const challengerAppUrl = `dieselduel://game?gameId=${gameId}&playerId=${challengerId}`;
+    const challengedAppUrl = `dieselduel://game?gameId=${gameId}&playerId=${realChallengedId}`;
+
+    res.json({ 
+        gameId, 
+        challengerUrl, 
+        challengedUrl,
+        challengerAppUrl,
+        challengedAppUrl
+    });
 });
 
 io.on('connection', (socket) => {

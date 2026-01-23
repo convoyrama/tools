@@ -480,4 +480,20 @@ body { margin: 0; padding: 0; width: 100vw; height: 100vh; display: flex; justif
 .racing-ui.vibrating { animation: subtleVibration 0.1s infinite; }
 .start-btn { background: #d32f2f; color: white; border: none; padding: 10px 30px; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: bold; }
 
+.solo-stats {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px dashed #555;
+    color: #aaa;
+    font-family: monospace;
+}
+
+.new-record-flash {
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+    animation: flashBar 0.5s infinite;
+}
+
 /* NOTE: Old Media Queries removed. Application is now vertical-first by design. */
