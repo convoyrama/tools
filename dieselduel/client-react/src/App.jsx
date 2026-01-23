@@ -99,20 +99,6 @@ function App() {
         window.history.replaceState({}, '', `?gameId=${gId}&playerId=${pId}`);
     }
 
-    // --- APP LAUNCHER BRIDGE ---
-    // If 'launchApp=true' is present, try to open the native app
-    const shouldLaunchApp = params.get('launchApp') === 'true';
-    if (shouldLaunchApp && gId && pId) {
-        const appScheme = `dieselduel://game?gameId=${gId}&playerId=${pId}`;
-        console.log("Bridging to App:", appScheme);
-        window.location.href = appScheme;
-        
-        // Show a fallback message in case it doesn't open
-        setTimeout(() => {
-             // Optional: Update UI to say "If app didn't open..."
-        }, 500);
-    }
-
     if (gId && pId) {
         // ONLINE MODE
         setPlayerId(pId);

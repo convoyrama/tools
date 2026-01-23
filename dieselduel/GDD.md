@@ -70,8 +70,7 @@ El núcleo del juego es la **gestión de recursos mecánicos** (RPM, Temperatura
 *   El motor de audio sintetiza el tono del motor basado en las RPM en tiempo real.
 *   Efectos para Turbo, Cambio de Marcha (neumático), Explosión y Música de fondo aleatoria.
 
-## 6. Roadmap Futuro (Expansión Móvil)
-*   **Conversión a APK:** Uso de **Capacitor** para empaquetar el cliente React como App nativa de Android.
-*   **Deep Linking:** Configurar el esquema de URL para que los enlaces de Discord (`dieselduel://game/...`) abran la App directamente.
-*   **Modo Offline:** Permitir jugar contra el cronómetro o una IA simple sin conexión a internet, aprovechando que la física corre en local.
+## 6. Roadmap Futuro (Web Focused)
+*   **Optimización Móvil:** Refinar la UI para navegadores móviles (PWA).
+*   **Modo Offline:** Permitir jugar contra el cronómetro o una IA simple sin conexión, aprovechando que la física corre en local.
 *   **Consumo de Diesel:** Implementar mecánica de L/100km visualizada como humo o estadística final.

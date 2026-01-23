@@ -165,16 +165,10 @@ app.post('/api/create-race', (req, res) => {
     const challengerUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${challengerId}`;
     const challengedUrl = `${clientBaseUrl}/?gameId=${gameId}&playerId=${realChallengedId}`;
 
-    // App URLs (Custom Scheme)
-    const challengerAppUrl = `dieselduel://game?gameId=${gameId}&playerId=${challengerId}`;
-    const challengedAppUrl = `dieselduel://game?gameId=${gameId}&playerId=${realChallengedId}`;
-
     res.json({ 
         gameId, 
         challengerUrl, 
-        challengedUrl,
-        challengerAppUrl,
-        challengedAppUrl
+        challengedUrl
     });
 });
 

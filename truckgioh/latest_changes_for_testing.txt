@@ -1,3 +1,0 @@
-He implementado todas las correcciones y cambios que solicitaste. El costo de combustible del motor, la visualización del HP en combate, la lógica de las cartas trampa (activación y destrucción) y la compatibilidad del chasis 4x2 han sido ajustados.
-
-Estoy listo para que lo pruebes de nuevo o para cualquier otra instrucción.
