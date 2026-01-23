@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import io from 'socket.io-client'
 import { App as CapApp } from '@capacitor/app'; 
+import { Capacitor } from '@capacitor/core';
 import { PHYSICS, GEARBOXES, CREDITS } from './gameConfig'
 import { audioEngine } from './AudioEngine'
 import './App.css'
 
-// Dynamic Socket URL: Use localhost if running locally, otherwise VPS
-const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+// Dynamic Socket URL
+// If native (Android/iOS), ALWAYS use VPS.
+// If web localhost, use localhost (dev).
+// If web production, use VPS.
+const isNative = Capacitor.isNativePlatform();
+const SOCKET_URL = (!isNative && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
   ? 'http://localhost:3200' 
   : 'http://23.94.221.241:3200';
 
